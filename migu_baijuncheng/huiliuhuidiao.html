@@ -1,0 +1,139 @@
+<#--
+回访处理servlet?
+shareObj 分享对象：=分享对象  ----   1：书籍业务（包含图书、漫画、杂志、听书、图片、手机报快讯、手机报资讯）；  6：书单  10:其他;5:客户端分享
+&bid=内容ID
+&cid=章节id
+&rtid=快讯id
+&pid=品牌id
+&type=业务类型  ----	业务类型：图书：1，杂志：3，漫画：2，听书：5，图片：2，手机报：7；
+&uid=用户id
+//&shareType=分享手段 --- 推荐方式：  1：短信  2：二维码  3：微信好友  4：微信朋友圈  5:新浪微博
+shareType = 推荐方式：  1：短信  2：二维码  3：新浪微博  4：微信
+&cm=渠道号
+&status=预留参数
+-->
+
+
+<#assign tokenid = user.getToken()!"null">
+<#assign userAgent = request.getHeader("User-Agent")!"null">
+<#assign d_shareObjParam = request.getParameter("shareObj")!"null">
+<#assign d_bidParam = request.getParameter("bid")!"null">
+<#assign d_cidParam = request.getParameter("cid")!"null">
+<#assign d_rtidParam = request.getParameter("rtid")!"null">
+<#assign d_pidParam = request.getParameter("pid")!"null">
+<#assign d_mbidParam = request.getParameter("mbid")!"null">
+<#assign d_typeParam = request.getParameter("type")!"null">
+<#assign d_uidParam = request.getParameter("uid")!"null">
+<#assign d_shareTypeParam = request.getParameter("shareType")!"null">
+<#assign d_cmParam = request.getParameter("cm")!"null">
+<#assign d_statusParam = request.getParameter("status")!"null">
+<#assign d_srcmsisdn = request.getParameter("srcmsisdn")!"null">
+<#assign d_fromType = request.getParameter("fromType")!"null">
+<#assign d_code = request.getParameter("code")!"null">
+<#assign d_sendRedirect_Url = "">
+
+
+<#--当前站点是图书站点，客户端及图书分享会跳转到该页面-->
+<#if d_shareObjParam=="book"><#--分享书籍-->
+     
+		<#--uesftl-2904-->  
+		<#if d_typeParam == "5" >
+			<#if d_fromType=="1" >	
+				<#assign d_sendRedirect_RBC_DXWEIBO = "http://wap.cmread.com/r/p/BookShareBack.jsp?vt=3&amp;srcmsisdn=${d_srcmsisdn}&amp;shareType=${d_shareTypeParam}">
+			   <#if userAgent?upper_case?contains("MICROMESSENGER") ||userAgent?upper_case?contains("WEIBO")>
+				<#assign d_sendRedirect_Url = d_sendRedirect_RBC_DXWEIBO+"&amp;from=1&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}"> 	
+			   <#else> 
+				<#assign d_sendRedirect_Url = d_sendRedirect_RBC_DXWEIBO+"&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}">		 	 		   
+			  </#if> 
+			<#else>						
+				<#if d_book??>
+					<#assign bookurl = "">
+					<#if d_book.getFirstChapter().getId()??>
+                                                <#assign bookurl= "http://wap.cmread.com/rbc/p/hlread.jsp?vt=3&amp;shareType=${d_shareTypeParam}">
+						
+						<#assign d_sendRedirect_Url = bookurl+"&amp;srcmsisdn=${d_srcmsisdn}&amp;bid=${d_bidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}">
+					<#else>
+						<#assign d_sendRedirect_Url = "http://wap.cmread.com/r/p/BookShareBack.jsp?vt=3&amp;shareType=${d_shareTypeParam}&amp;srcmsisdn=${d_srcmsisdn}&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}">
+					</#if>
+				</#if>
+						
+				<#if userAgent?upper_case?contains("MICROMESSENGER") ||userAgent?upper_case?contains("WEIBO")>
+					<#assign d_sendRedirect_Url = d_sendRedirect_Url +"&amp;from=1"> 			 	 		   
+				</#if> 	
+
+			</#if>
+		</#if>
+   <#if d_typeParam == "1" > 		
+		  <#assign d_sendRedirect_RBC_DXWEIBO = "http://wap.cmread.com/r/p/wechatAAA.jsp?vt=3&amp;srcmsisdn=${d_srcmsisdn}&amp;shareType=${d_shareTypeParam}&amp;cm=D00104TX">
+           <#if userAgent?upper_case?contains("MICROMESSENGER") ||userAgent?upper_case?contains("WEIBO")>
+		    <#assign d_sendRedirect_Url = d_sendRedirect_RBC_DXWEIBO+"&amp;from=1&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}"> 	
+		   <#else> 
+		    <#assign d_sendRedirect_Url = d_sendRedirect_RBC_DXWEIBO+"&amp;from=1&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}">		 	 		   
+		  </#if> 
+	 </#if>	
+  
+   
+<#elseif d_shareObjParam=="client"><#--分享客户端-->
+   <#assign d_sendRedirect_RBC_CDXWEIBO = "http://wap.cmread.com/rbc/p/clientDWsrp.jsp?vt=3&amp;shareType=${d_shareTypeParam}&amp;srcmsisdn=${d_srcmsisdn}">
+   <#if userAgent?upper_case?contains("MICROMESSENGER") ||userAgent?upper_case?contains("WEIBO")> 
+	  <#assign d_sendRedirect_Url = d_sendRedirect_RBC_CDXWEIBO+"&amp;from=1&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}">
+   <#else>
+      <#assign d_sendRedirect_Url = d_sendRedirect_RBC_CDXWEIBO+"&amp;bid=${d_bidParam}&amp;cid=${d_cidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}">    
+   </#if>
+<#elseif d_shareObjParam=="vcodeactivity"><#--分享V码-->
+   <#assign d_sendRedirect_VCode = "http://wap.cmread.com/rbc/p/vCodeBack.jsp?vt=3&amp;shareType=${d_shareTypeParam}&amp;srcmsisdn=${d_srcmsisdn}">
+   <#if userAgent?upper_case?contains("MICROMESSENGER") ||userAgent?upper_case?contains("WEIBO")> 
+	  <#assign d_sendRedirect_Url = d_sendRedirect_VCode +"&amp;from=1&amp;code=${d_code}">
+   <#else>
+      <#assign d_sendRedirect_Url = d_sendRedirect_VCode +"&amp;code=${d_code}">    
+   </#if>
+<#elseif d_shareObjParam=="fcodeactivity"><#--分享F码-->
+   <#assign d_sendRedirect_FCode = "http://wap.cmread.com/rbc/p/msglink.jsp?vt=3&amp;shareType=${d_shareTypeParam}&amp;srcmsisdn=${d_srcmsisdn}">
+   <#if userAgent?upper_case?contains("MICROMESSENGER") ||userAgent?upper_case?contains("WEIBO")> 
+	  <#assign d_sendRedirect_Url = d_sendRedirect_FCode +"&amp;from=1&amp;productID=${d_bidParam}&amp;code=${d_code}">
+   <#else>
+      <#assign d_sendRedirect_Url = d_sendRedirect_FCode +"&amp;productID=${d_bidParam}&amp;code=${d_code}">    
+   </#if>
+
+<#--UESFTL-5640、20160128、马晓娜开始-->
+<#elseif d_shareObjParam=="noteshare"><#--分享笔记-->
+   <#assign d_sendRedirect_Url= "http://wap.cmread.com/r/p/notehl.jsp?vt=3&amp;bid=${d_bidParam}&amp;mbid=${d_mbidParam}&amp;tokenid=${tokenid}&amp;shareType=${d_shareTypeParam}">
+  
+   <#if d_sendRedirect_Url!="null" && d_sendRedirect_Url!=""> 
+		<#assign userToken = user.getToken()>
+		<#assign resUrl = d_sendRedirect_Url+'&tokenid='+userToken>
+		<div id="d_sendRedirect_Url_bj" style="display:none">${resUrl}</div>
+		<!--重定向成功了没啊-->
+		<#-- ${response.sendRedirect('${resUrl?replace("&amp;","&")}')} -->
+	</#if>
+   <script>
+     var d_secondUrl = $("#d_sendRedirect_Url_bj").text().replace(/&amp;/g,'&');
+     /*alert(d_secondUrl);*/
+     window.location.href = d_secondUrl;
+   </script>
+   <#--UESFTL-5640、20160128、马晓娜结束-->
+
+</#if>
+
+
+	<#if d_sendRedirect_Url!="null" && d_sendRedirect_Url!=""> 
+		<#assign userToken = user.getToken()>
+		<#assign resUrl = d_sendRedirect_Url+'&tokenid='+userToken>
+		<div id="d_sendRedirect_Url_ID" style="display:none">${resUrl}</div>
+		<!--重定向成功了没-->
+		<#--${response.sendRedirect('${resUrl?replace("&amp;","&")}')}-->
+	</#if>
+
+
+		
+	<script>
+		$(function(){
+			var d_sendRedirect_UrlVal_ID = $("#d_sendRedirect_Url_ID").text().replace(/&amp;/g,'&');
+			/*alert(d_sendRedirect_UrlVal_ID);*/
+			window.location.href = d_sendRedirect_UrlVal_ID;
+/*alert(d_sendRedirect_UrlVal_ID);*/
+		});
+	</script>
+<#--  2016.03.23删除miguday相关代码-->
+
+

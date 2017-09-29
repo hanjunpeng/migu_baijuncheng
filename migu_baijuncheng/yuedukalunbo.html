@@ -1,0 +1,38 @@
+<!--碎片：悦读咖_banner轮播-->
+<#--hanjunpeng start-->
+<#--数据源：链接列表数据源:d_ydh_linkList-->
+<#assign ydh_img="">
+<#assign ydh_info="">
+<#assign ydh_a="">
+<div class="swiperTouchRead">
+<div class="swiper-container swiper-con">
+    <div class="swiper-wrapper swiper-box">
+    	<#if d_ydh_linkList??>
+       		<#assign ydh_list =  d_ydh_linkList.getLinkList()![]>
+    		<#list ydh_list as ydh_link>
+      			<#assign ydh_img=ydh_link.getPicUrl()!"">
+      			<#assign ydh_info=ydh_link.getDesc()!"">
+      			<#assign ydh_a=ydh_link.getUrl()!"">
+			<div class="swiper-slide">
+				<div class="ydh-img-swiper">
+					<#if ydh_img!="null" && ydh_img!="">
+						<img class="swiper-imp" src="${ydh_img}">
+					</#if>
+					<#if ydh_a !="null" && ydh_a !="">
+						<a <#if ydh_a !="null" && ydh_a !="" && (!ydh_a?contains("/#")&&!ydh_a?contains("#?"))> href="${ydh_a}"<#else></#if> class="play"></a>
+					<#else>
+						<a href="javascript:;">
+					</#if>
+					<#if ydh_info!="null" && ydh_info!="">
+					<div class="describe">${ydh_info}</div>
+					</#if>
+				</div>
+			</div>
+			</#list>
+		</#if>
+	</div>
+</div>
+	<div class="swiper-pagination"></div>
+	<div class="swiper-button-next"></div>
+	<div class="swiper-button-prev"></div>
+</div>

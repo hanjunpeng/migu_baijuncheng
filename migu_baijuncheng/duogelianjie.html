@@ -1,0 +1,88 @@
+<#--
+	BR003921、韩俊朋、20170723、新增碎片
+	新增数据源:
+		链接列表数据源:d_linkList;
+    碎片变量：
+        selected 【当前选择】单选，默认:1:1;2:2;3:3;4:4;非必填，默认1;
+        shownum  【显示个数】 单选，默认：1:2;2:3;3:4,非必填，默认2;
+-->
+<!--fmName:多个tab链接_V7-->
+<#if f_Value??>
+    <#assign f_selected = f_Value.getValue("selected")!""><#--获取当前选择-->
+    <#assign f_shownum = f_Value.getValue("shownum")!""><#--获取显示的个数-->
+</#if>
+<!--f_selected=${f_selected},f_shownum=${f_shownum}-->
+<#if f_selected == "">
+    <#assign f_selected = "1"><#--默认当前为1-->
+</#if>
+<#if f_shownum == "">
+    <#assign f_shownum = "2"><#--默认显示个数2-->
+</#if>
+<#assign num = f_shownum?number>
+<#assign selected = f_selected?number>
+ <#--  <#if (selected>num)>
+    <#assign selected =1>
+</#if>   -->
+<#------tab切换链接开始-------->
+<#if d_linkList??>
+<#assign linkList = d_linkList.getLinkList()![]>
+    <div class="autoW">
+        <ul>
+            <#list 0..num as t>
+                <!--t=${t_index}-->
+                <#if linkList[t]?? && linkList[t].getDesc()!="">
+                    <#if selected == t+1>
+                        <li class="on">
+                    <#else>
+                        <li>
+                    </#if>
+                    <#if (linkList[t].getUrl()?? && linkList[t].getUrl()!="" && (!linkList[t].getUrl()?contains("#?")))>
+                        <a href="${linkList[t].getUrl()}">
+                    <#else>
+                        <a>
+                    </#if>
+                    ${linkList[t].getDesc()}
+                    </a>
+                    </li>   
+                </#if>
+            </#list>
+        </ul>
+    </div>      
+</#if>
+<style>
+*{
+	-webkit-tap-highlight-color:transparent;
+	.autoW li{background:#fff}
+}
+.autoW li.on a{
+	position:relative;
+	border-bottom:0;
+}
+.autoW li.on a:before{
+	content:"";
+	width:100%;
+	height:3px;
+	-webkit-border-radius:10px;
+	background:#3778ff;
+	border-radius:10px;
+	position:absolute;
+	left:0;
+	bottom:0;
+}
+</style>
+<script>
+$(function(){
+	$(".sqremain").next().css({"border-top":"1px solid #E2E9EB","border-bottom":"1px solid #fff","height":"3.3rem","background":"#fff"});
+	$(window).scroll(function(){
+		var top = $(window).scrollTop();
+		var autoWTop = $(".sqremain").first().height();
+		if(top>autoWTop){
+			$(".autoW").css({"position":"fixed"});
+		}else{
+			$(".autoW").css({"position":"relative"});
+		}
+	});
+});
+</script>
+
+

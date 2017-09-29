@@ -1,0 +1,25 @@
+<style>
+.ydh-log-list a,.ydh-log-list a:active,.ydh-log-list a:hover{color: #fff;box-flex: 1;-webkit-box-flex: 1;-moz-box-flex: 1; text-align: center;height: 15px; line-height: 15px; font-size: 11px; border-right: 1px solid #9d9794; display: block; cursor: pointer;}
+</style>
+<!--碎片:悦读咖_顶部导航-->
+<#--hanjunpeng start-->
+<#--
+    链接列表数据源:d_ydh_topbar
+-->
+
+<div class="ydh-log-list">
+	<#if d_ydh_topbar??>
+		<#assign ydh_topbar=d_ydh_topbar.getLinkList()!"">
+		<#list ydh_topbar as topbar_one>
+		   <#assign topbar_a=topbar_one.getUrl()!"">
+		   <#assign topbar_text=topbar_one.getDesc()!"">
+		   <#if topbar_a!="null" && topbar_a!="">
+		 		<a <#if topbar_a !="null"&&topbar_a !="" &&(!topbar_a?contains("/#")&&!topbar_a?contains("#?"))>href="${topbar_a}"<#else></#if>>
+		   <#else>
+		 		<a href="javascript:;">
+		   </#if>
+			<#if topbar_text!="null" && topbar_text!="">${topbar_text}</#if>
+			</a>
+		</#list>
+	</#if>
+</div>

@@ -1,0 +1,136 @@
+<#--
+	BR003935、韩俊朋、20170731、新增碎片
+	新增数据源:
+       笔记数据源:d_note;
+-->
+<!--fnName:个人笔记_V7-->
+<#assign ln_num = 1>
+<#assign d_mbid = request.getParameter("mbid")!"null"><#--用户id-->
+<#if d_mbid!="null" && d_mbid!="">
+	<#assign d_userInfo = user.getUserInfo("${d_mbid}")!"null"><#--他人主页-->
+<#else>
+	<#assign d_userInfo = user.getUserInfo()!"null"><#--我的主页-->
+</#if>
+<#assign FragmentId = request.getFragmentId()!"null"><#--返回当前碎片的id-->
+<#assign rbc_tj_url = "http://wap.cmread.com/rbc/p/statpage.jsp?vt=3"><#--rbc的统计页-->
+<#assign link_ln_url = util.processForView(rbc_tj_url)!"null"><#--获取数据源信息-->
+<#assign ln_url = util.addLinkNo('${link_ln_url}','${FragmentId}','L${ln_num}')!"null">
+<!--ln_url=${ln_url}-->
+<#assign ln_num = ln_num+1>
+<#assign userAgent = request.getHeader("User-Agent")!"null">
+
+<#if d_note??>
+	<#assign noteList = d_note.getNoteList(1,3)!"null"><#--获取note列表-->
+	<#if userAgent?upper_case?contains("ANDROID")>
+		<#if noteList!=""&&noteList!="null">
+			<#assign noteContentList = noteList.getContent()! "">
+			<!--noteContentList=${noteContentList?size}-->
+			<#if noteContentList?size &gt; 0>
+				<section class="cmr-person-ta">
+					<#if d_mbid!="null" && d_mbid != "">
+						<span class="cmr-perso-lef cmr-penji">TA的笔记</span>
+					<#else>
+						<span class="cmr-perso-lef cmr-penji">我的笔记</span>
+					</#if>
+					<a onclick="cmrsdk.startUserNotes()">
+						<span class="cmr-ri-pero">
+							<i>查看全部</i>
+							<i class="cmr-icon cmr-greater-icon cmr-font-big cmr-color"></i>
+						</span>
+					</a>
+				</section>
+				<section class="pic-box pic-border">
+					<#list noteContentList as bookNote>
+						<#call reader(bookNote)>
+					</#list>
+				</section>
+			</#if>
+		<#else>
+			<section class="cmr-person-ta">
+				<#if d_mbid!="null" && d_mbid != "">
+					<span class="cmr-perso-lef cmr-penji">TA的笔记</span>
+				<#else>
+					<span class="cmr-perso-lef cmr-penji">我的笔记</span>
+				</#if>
+			</section>
+			<section class="cmr-kong-t">
+				<div class="cmr-kong-s">你还没有写过笔记</div>
+			</section>
+		</#if>
+	<#else>
+	 <!-- ${util.isSupportAbility("ios_new7")} -->
+		<#if util.isSupportAbility("ios_new7") == "1">
+			<#if noteList!=""&&noteList!="null">
+				<#assign noteContentList = noteList.getContent()! "">
+				<!--noteContentList=${noteContentList?size}-->
+				<#if noteContentList?size &gt; 0>
+					<section class="cmr-person-ta">
+						<#if d_mbid!="null" && d_mbid != "">
+							<span class="cmr-perso-lef cmr-penji">TA的笔记</span>
+						<#else>
+							<span class="cmr-perso-lef cmr-penji">我的笔记</span>
+						</#if>
+						<a onclick="cmrsdk.startUserNotes()">
+							<span class="cmr-ri-pero">
+								<i>查看全部</i>
+								<i class="cmr-icon cmr-greater-icon cmr-font-big cmr-color"></i>
+							</span>
+						</a>
+					</section>
+					<section class="pic-box pic-border">
+						<#list noteContentList as bookNote>
+							<#call reader(bookNote)>
+						</#list>
+					</section>
+				</#if>
+			<#else>
+				<section class="cmr-person-ta">
+					<#if d_mbid!="null" && d_mbid != "">
+						<span class="cmr-perso-lef cmr-penji">TA的笔记</span>
+					<#else>
+						<span class="cmr-perso-lef cmr-penji">我的笔记</span>
+					</#if>
+				</section>
+				<section class="cmr-kong-t">
+					<div class="cmr-kong-s">你还没有写过笔记</div>
+				</section>
+			</#if>
+		</#if>
+	</#if>	
+</#if>
+
+<#macro reader(bo)>
+	<#assign book = bo.getBook()! ""><#--获取book对象-->					
+	<#assign d_FirstChapter = book.getFirstChapter()!"null"><#--第一章节-->
+	<#if d_FirstChapter != "" && d_FirstChapter != "null">
+		<#assign d_FirstChapterId = d_FirstChapter.getId()!"null">
+		<#assign d_FirstChapterName = d_FirstChapter.getName()!"null">
+	</#if>
+	<#assign d_bookId = book.getId()! "">
+	<#assign latestRead = book.getLatestRead()!"null">	<#--判断最后阅读的章节-->
+	<#if latestRead != "" && latestRead != "null">
+		<#assign lastReadId = latestRead.getId()!"null"><#--最近阅读章节id-->
+	<#else>
+		<#assign lastReadId = d_FirstChapterId>
+	</#if>
+	<#assign d_contentType = book.getContentType()! "">
+	<#assign d_bookName = book.getName()! "">
+	<#assign d_chargeMode = book.getChargeMode()! ""><#--计费模式:0：免费1：按本计费2：按章计费3：按字计费-->
+	<#assign d_penName = (book.getAuthor().getPenName())!"null"><#--作者名-->
+	
+	
+	<#assign bookCoverLogo = book.getCoverLogo("2","1")! ""><#--获取图片-->
+	<#assign bookShowName = book.getShowName()! ""><#--获取图书名称-->
+	<#assign noteCount = bo.getNoteCount() ! ""><#--获取笔记数量-->
+	<div class="pic-item">
+		<a onclick="readHDTJ('${ln_url}',cmrsdk.startReader({contentID:'${d_bookId}',chapterID:'${lastReadId}',offset:'0',contentName:'${bookShowName}',bigLogo:'${bookCoverLogo}',chargeMode:'${d_chargeMode}',contentType:'${d_contentType}',authorName:'${d_penName}',bookLevel:'4',isCompare:true,recentlyTime:''}))">
+			<div class="pic-imgitem">
+				<img class="book-cover" data-src="${bookCoverLogo}" alt="">
+				<i class="cmr-icon cmr-migu-icon cmr-migubg-large"></i>
+			</div>
+		</a>
+		<span class="book-name cmr-font-big" >${bookShowName}</span>
+		<span class="book-pen cmr-font-big" style="margin-top:0.3rem;">${noteCount}条笔记</span>
+	</div>
+</#macro>
+

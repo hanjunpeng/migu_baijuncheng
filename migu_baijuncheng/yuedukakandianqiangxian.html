@@ -1,0 +1,70 @@
+<!--碎片：悦读咖_看点抢先-->
+<#--hanjunpeng start-->
+<#--  
+      数据源：
+      			d_bigpiclist,链接列表数据源(大图)、
+      			d_littlepiclist,链接列表数据源(小图)
+      			d_more_link,链接数据源(更多)
+      碎片变量:
+      			title_text,标题文本（输入框）
+               
+-->
+<#assign title_text="">
+<#if f_value??>
+	<#assign title_text=f_value.getValue('title_text')!""><#--获取标题-->
+</#if>
+<#if title_text!="null" && title_text!="">
+<div class="ydh-title"><span>${title_text}</span></div>
+</#if>
+<div class="swiperTouchPic">
+	<div class="swiper-container">
+		<div class="swiper-wrapper" >
+			<#if d_bigpiclist??>
+				<#assign piclist=d_bigpiclist.getLinkList()!""><#--获取链接列表-->
+				<#list piclist as pic><#--遍历列表-->
+				    <#assign bigpic=pic.getPicUrl()!""><#--获取图片-->
+				    <#assign bigpicLink=pic.getUrl()!""><#--获取跳转地址-->
+				    <div class="swiper-slide" >
+						<div class="ydh-auther ydh-public">
+							<#if bigpicLink !="null" && bigpicLink!="">
+								<a <#if bigpicLink !="null"&&bigpicLink !=""&&(!bigpicLink?contains("/#")&&!bigpicLink?contains("#?"))>href="${bigpicLink}"<#else></#if> >
+								<#else>
+		 						<a href="javascript:;">
+							</#if>
+								<img class="swiper-imp" src="${bigpic}" />
+							</a>
+						</div>
+					</div>
+				</#list>
+			</#if>
+	    </div>
+	    <#assign imgsJson = "{'imgs':[">
+	    <#assign imgs = "">
+	    <#if d_littlepiclist?? && d_littlepiclist.getLinkList()?? && (d_littlepiclist.getLinkList()?size &gt; 0)>
+	    	<#assign littlepiclist = d_littlepiclist.getLinkList()!"">
+	    	<#list littlepiclist as littlepic>
+	    		<#assign pic = littlepic.getPicUrl()!"">
+	    		<#if littlepic_has_next>
+	    			<#assign imgs = imgs + "'${pic}',">
+	    		<#else>	
+	    			<#assign imgs = imgs + "'${pic}'">
+	    		</#if>
+	    	</#list>
+	    </#if>
+	    <#assign imgsJson = imgsJson + imgs + "]}">
+	    <#assign more_url = "">
+	    <#assign more_pic_url = "">
+	    <#if d_more_link ??>
+	    	<#assign more_url = d_more_link.getUrl()!"">
+	    	<#assign more_pic_url = d_more_link.getPicUrl()!"">
+	    </#if>
+	    <div class="swiper-pagination" data-link="{'url':'${more_url}','img':'${more_pic_url}'}" data-length="${d_littlepiclist.getLinkList()?size}" data-imgs="${imgsJson}"></div>
+	</div>
+</div>
+
+
+
+
+
+
+

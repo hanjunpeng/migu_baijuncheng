@@ -1,0 +1,22 @@
+<!--碎片：悦读咖_内容列表-->
+<#--BR002820 hanjunpeng star-->
+<#--链接数据源：d_link-->
+<#if d_link??>
+	<#assign getPicUrl = d_link.getPicUrl()!"">
+	<#assign getDesc = d_link.getDesc()!"">
+	<#assign getPrefix = d_link.getPrefix()!"">
+	<#assign getSuffix = d_link.getSuffix()!"">
+	<#assign getUrl = d_link.getUrl()!"">
+</#if>
+<div class="xiye">
+	<div class="xiye-pic">
+                <img src="${getPicUrl}">
+                <a class="pla" <#if getUrl != "null" && getUrl !="" &&(!getUrl?contains("/#")&&!getUrl?contains("#?"))>href="${getUrl}"<#else></#if> ></a>
+          </div>
+    <div class="xiye-box">
+		<h1 class="xiye-title">${getDesc}</h1>
+		<p class="xiye-time">${getPrefix}</p>
+		<span class="xiye-span"></span>
+		<p class="xiye-conter">${getSuffix}</p>
+	</div>	
+</div>

@@ -1,0 +1,296 @@
+<#--BR002971 hanjunpeng 20170510 纵向内容列表_V7 start-->
+<#--BR003701、钱克、20170705、加话单统计 -->
+<#--数据源:专区数据源:d_nodes;专区列表数据源:d_nodesLi;-->
+<#--碎片变量
+			d_endThe【尾标】单选框  1:点击量;2:图书评分;3:作者名;
+			isLaLoding【是否上拉加载】1:是;2:否;默认1
+			f_showPage【展示条数】 输入框 默认 10;
+			f_isShowBorder 【是否展示下划线】 单选框 1:展示;2:不展示; 默认1;
+			f_showIcon【角标展示】复选框 非必填: 1:上传;2:限免;3:名家;4:会员;5:免费;6:完本;
+            f_originShuju  【数据来源】 1.专区;2:专区列表(无上拉加载);
+-->
+<#--
+	BR003818、王吉、20170706、新增碎片变量
+	是否新开webview(单选框):isOpenView;默认:2;枚举值:1:是;2:否;
+-->
+<style>
+	.cmr-bkdesc .cmr-color-hui{color:#969fa9;}
+	.cmr-bkdesc cmr-top-ju{margin-top:0.6rem;}
+	.isShowBo{margin-top:1.13rem;}
+	/*.cmr-btn-type5{padding:0 3px;border:1px solid #C3CED9;}*/
+	.lastBor .bo{display:block;margin:0 4.2%;}
+	.last .bo:last-child section{border-bottom:1px solid #f0f0f0;}
+	.lastBor .bo .cmr-aus{width:100%;padding:0 0 1.47rem 0;}
+	.cmr-guochang{font-size:0.8rem;display:inline-block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:9rem;}
+	.cmr-bookbox .cmr-ha-le{position:absolute;}
+</style>
+<!--fmName:纵向内容列表_V7-->
+<#assign ln_num = 1 >
+<#assign pageYe = 1>
+<#assign nextPageUrl = "">
+<#assign isOpenView = "2"><#--是否新开webview-->
+<#if f_value??>
+    <#assign f_originShuju = f_value.getValue("f_originShuju")! ""><#--获取专区来源-->
+	<#assign isShowDis = f_value.getValue("isShowDis")! ""><#--是否展示上边距-->
+	<#assign isLaLoding = f_value.getValue("isLaLoding")! ""><#--是否上拉加载-->
+	<#assign d_endThe = f_value.getValue("d_endThe")! ""><#--获取尾标-->
+	<#assign f_showPage = f_value.getValue("f_showPage")! ""><#--获取展示条数-->
+	<#assign f_showPage = f_showPage?number>
+	<#assign f_isShowBorder = f_value.getValue("f_isShowBorder")! ""><#--获取是否展示下划线-->
+	<#assign f_showIcon = f_value.getValue("f_showIcon")! ""><#--获取角标-->
+	<#assign multiple = f_value.getValue("multiple")!"1">
+	<#assign multiple = multiple?number >
+	<#assign isOpenView = f_value.getValue("isOpenView")!"2"><#--是否新开webview-->
+</#if>
+<#if isOpenView == "">
+	<#assign isOpenView = "2"><#--是否新开webview,默认:1;枚举值:1:是;2:否;-->
+</#if>
+<!--d_endThe =${d_endThe}-->
+<#if isShowDis=="">
+	<#assign isShowDis="2">
+</#if>
+<#if f_originShuju=="">
+	<#assign f_originShuju = "1"><#--默认1-->
+</#if>
+<!--isLaLoding=${isLaLoding}-->
+<!--f_originShuju=${f_originShuju}-->
+<#-- ---------上拉加载所需要的数据  开始--------- -->
+<#assign fragmentId = request.getFragmentId()!"null"><#-- 返回当前碎片的id -->
+<#assign d_pageNo = request.getParameter("page")!"1"><#-- 请求数据源，获取请求参数，获取页码 -->
+<#if d_pageNo=="" || d_pageNo=="null">
+  <#assign d_page = 1>  
+<#else>
+  <#assign d_page = d_pageNo?number><#--转换成number类型--> 
+</#if>
+<#assign currPage = d_page>
+<#assign nextPage = d_page + 1>
+<#assign purl_param = request.getParameter("purl")!"">
+<#-- ---------上拉加载所需要的数据  结束--------- -->
+
+<!--d_page=${d_page}-->
+<!--f_showPage=${f_showPage}-->
+<#if isShowDis="1"><#--展示上边距-->
+	<section class="isShowBo">
+<#else>
+	<section>
+</#if>
+<#if f_isShowBorder="1"><#--展示下划线-->
+	<div class="lastBor last" id="${fragmentId}" >
+<#else>
+	<div class="lastBor" id="${fragmentId}" >
+</#if>
+<#if f_originShuju=="1"><#--专区数据源-->
+	<#if d_nodes??>
+		<#assign nodeContent = d_nodes.getBookList(d_page,f_showPage)!"null"><#--专区下的内容列表-->
+		<!--nodeContent=${nodeContent?size}-->
+		<#if nodeContent?? && nodeContent != "null" && nodeContent!="">
+			<#assign nextPageUrl = nodeContent.getNextPage()!"null"><#--上拉加载需要下一页-->
+			<!--nextPageUrl=${nextPageUrl}-->
+			<#assign nodeCon = nodeContent.getContent()!"">
+			<#call Orign(nodeCon)>
+		</#if>
+	</#if>
+	<#-- 加载更多 start -->
+	<#assign nextPageUrl1 = util.addParam(nextPageUrl, "ol", "${fragmentId}")>
+	<#assign nextPageUrl2 = util.addParam(nextPageUrl1,"purl","${purl_param}")>
+	<#assign nextPageUrl3 = util.addParam(nextPageUrl2, "page", "${nextPage}")>
+	<#if nextPageUrl3?index_of('vt=3')!= -1>
+		<#assign bookNextPage4 = nextPageUrl3?replace('vt=3','vt=9')>
+	<#else>
+		<#assign bookNextPage4 = util.addParam(nextPageUrl3, "vt", "9")>
+	</#if>
+	<#assign nextPageData = "{'nextUrl':'${bookNextPage4}','currPage':'${currPage}','nextPage':'${nextPage}','fragmentId':'${fragmentId}'}">
+	<#if nextPageUrl!="" && nextPageUrl!="null" && (!nextPageUrl?contains('#')&&!nextPageUrl?contains('null')) && isLaLoding=="1" && f_originShuju=="1">
+		<div class="spin">
+			<input id="downlazyLoad" type="hidden" value="${nextPageData}"/>
+		</div>
+	</#if>
+<#-- 加载更多 end -->
+<#else><#--专区列表数据源-->
+	<#if d_nodesLi??>
+		<#assign nodesList = d_nodesLi.getNodeList()!""><#--获取node列表-->
+		<#if nodesList?? && nodesList?size &gt; 0>
+			<#list nodesList as node>
+				<#assign nodeId = node.getId()!""><#--获取node的id-->
+				<#assign bookList = d_nodesLi.getBookList('${nodeId}',1,f_showPage)!><#-- 获取图书列表 -->
+				<!--bookList=${bookList?size}-->
+				<#if bookList??&&bookList?size &gt; 0>
+					<#call Orign(bookList)>
+				</#if>
+			</#list>
+		</#if>
+	</#if>
+</#if>
+</div>
+</section>
+
+<#if isLaLoding=="1" && f_originShuju=="1">
+	<div class="showOver">已显示全部</div>
+</#if>
+
+<#macro Orign(orig)>
+	<#list orig as book>
+                 <!--book=${book?size}-->
+		<#if book?size &gt;0>
+		<#assign bookCoverLogo = book.getCoverLogo("2","1")! ""><#-- 获取图书封面 -->
+		<#assign bookShowName = book.getShowName()! ""><#-- 获取书名 -->
+		<#assign authorPenName = (book.getAuthor().getPenName())! ""><#-- 获取作者笔名 -->
+		<#assign bookBrief = book.getBrief()! ""><#--获取简介内容-->
+		<#assign bookUrl = book.getUrl()! ""><#-- 获取图书跳转地址 -->
+		<#-- 话单统计 开始 -->
+		<#assign bookUrl = util.processForView(bookUrl)!"null">
+		<#assign dataSrcConf ="">
+		<#if f_originShuju=="1">
+			<#assign dataSrcConf=(d_nodes.getDataSrcConf().getDataId())!"null">
+		<#elseif f_originShuju=="2">
+			<#assign dataSrcConf=(d_nodesLi.getDataSrcConf().getDataId())!"null">
+		</#if>
+		<#if bookUrl!="" && bookUrl!="null" && !bookUrl?contains('#') && isOpenView == "1"><#--默认新开webview-->
+			<#assign bookUrl = util.addParam(bookUrl,'newWebview','1')!"">
+		</#if>
+		<#assign bookUrl= util.addLinkNo("${bookUrl}","${dataSrcConf}","L${ln_num}")!"">
+		<#assign ln_num = ln_num +1>
+		<#if bookUrl==""||bookUrl=="null"||bookUrl?contains("#")||bookUrl?contains("javascript:void(0);")>
+			<#assign bookUrl = "javascript:void(0);">
+		</#if>
+		<#-- 话单统计 结束 -->
+		<#assign bookScore = book.getScore()!""><#--获取图书评分-->
+		<#assign cateNode = (book.getCategory().getUniteNode().getName())!""><#--获取图书分类-->
+		<!--cateNode=${cateNode}-->
+		<#assign cateNodeUrl = (book.getCategory().getUniteNode().getUrl())!""><#--获取分类跳转地址-->
+		<#-- 话单统计 开始 -->
+		<#assign cateNodeUrl = util.processForView(cateNodeUrl)!"null">
+		<#assign dataSrcConf ="">
+		<#if f_originShuju=="1">
+			<#assign dataSrcConf=(d_nodes.getDataSrcConf().getDataId())!"null">
+		<#elseif f_originShuju=="2">
+			<#assign dataSrcConf=(d_nodesLi.getDataSrcConf().getDataId())!"null">
+		</#if>
+		<#assign cateNodeUrl= util.addLinkNo("${cateNodeUrl}","${dataSrcConf}","L${ln_num}")!"">
+		<#assign ln_num = ln_num +1>
+		<#if cateNodeUrl==""||cateNodeUrl=="null"||cateNodeUrl?contains("#")||cateNodeUrl?contains("javascript:void(0);")>
+			<#assign cateNodeUrl = "javascript:void(0);">
+		</#if>
+		<#-- 话单统计 结束 -->
+		       <#assign bookClickNum = "">
+                       <#assign bookClickNumZaidu = "">
+		        <#assign bookClickNum = book.getClickValue()! ""><#-- 获取图书点击量 -->
+				<#assign bookClickNumZaidu= book.getBookUV()! "">
+			<#if bookClickNum!="">
+				<#if (multiple &gt; 0) >
+					<#assign bookClickNum = bookClickNum?number >
+				</#if>
+				<!--bookClickNum=${bookClickNum}-->
+				<#if bookClickNum &gt; 10000>
+					<#assign bookClickNum = bookClickNum?c>
+					<#if bookClickNum?number &lt; 100000000>
+						<#assign bookClickNum = (bookClickNum?number/10000)?string("0")+"万">
+					<#elseif bookClickNum?number &lt; 10000000000>
+						<#assign bookClickNum = (bookClickNum?number/100000000)?string("0")+"亿">
+					<#elseif bookClickNum?number &gt; 10000000000>
+						<#assign bookClickNum ="99亿+">
+					</#if>
+				<#else>
+				   <#assign bookClickNum = bookClickNum>
+				</#if>
+			<#else>
+				<#assign bookClickNum = util.getRandom(50)>
+				<#assign bookClickNum = bookClickNum?number+50>
+			</#if>
+			
+			<#if bookClickNumZaidu!="">
+				<#if (multiple &gt; 0) >
+					<#assign bookClickNumZaidu = bookClickNumZaidu?number >
+					<#assign bookClickNumZaidu = bookClickNumZaidu * multiple >
+				</#if>
+				
+				<#if bookClickNumZaidu &gt; 10000>
+					<#assign bookClickNumZaidu = bookClickNumZaidu?c>
+					<#if bookClickNumZaidu?number &lt; 100000000>
+						<#assign bookClickNumZaidu = (bookClickNumZaidu?number/10000)?string("0")+"万">
+					<#elseif bookClickNumZaidu?number &lt; 10000000000>
+						<#assign bookClickNumZaidu = (bookClickNumZaidu?number/100000000)?string("0")+"亿">
+					<#elseif bookClickNumZaidu?number &gt; 10000000000>
+						<#assign bookClickNumZaidu ="99亿+">
+					</#if>
+				<#else>
+				   <#assign bookClickNumZaidu = bookClickNumZaidu>
+				</#if>
+			<#else>
+				<#assign bookClickNumZaidu = util.getRandom(50)>
+				<#assign bookClickNumZaidu = bookClickNumZaidu?number+50>
+			</#if>
+			
+		<a href="${bookUrl}" class="bo">
+			<section class="cmr-aus cmr-bookbox cmr-bottom-ide">
+				<figure class="cmr-bkcover-middle">
+					<img class="cmr-bkimg-middle" data-src="${bookCoverLogo}" style="height:100%">
+					<#call showCorner(book)>
+					<i class="cmr-icon cmr-migu-icon cmr-migubg-middle"></i>
+				</figure>
+				<aside class="cmr-bkdesc">
+					<span class="cmr-bkname-large cmr-font-large">${bookShowName}</span>
+					<span class="cmr-bkauthor-large cmr-font-normal cmr-top-ju" style="margin-top:4%">
+						<i class="cmr-icon cmr-author-icon" style="margin-right:0.33rem;font-size:0.9rem"></i>
+						<i class="cmr-guochang">${authorPenName}</i>
+						<#if d_endThe = "1">
+							<i class="cmr-bian cmr-ha-le" style="color:#3E8AFF;font-size:0.8rem;top:2.5rem;right:0;">${bookClickNum}点击</i>
+						<#elseif d_endThe="2">
+							<i class="cmr-bian cmr-ha-le" style="color:#F85A44;font-size:0.8rem;right:0;top:2.5rem;">${bookScore}分</i>
+						<#elseif d_endThe="3">
+							<i class="cmr-bian cmr-btn-type5 cmr-ha-le" style="color:#969FA9;font-size:0.8rem;right:0;top:2.5rem;padding:0.2rem 0.3rem 0.1rem 0.3rem;border:1px solid #C3CED9;">${cateNode}</i>
+                                                 <#elseif d_endThe="4">
+							<i class="cmr-bian cmr-ha-le" style="color:#3E8AFF;font-size:0.8rem;top:2.5rem;right:0;">${bookClickNumZaidu}人在读</i>
+						</#if>
+					</span>
+					<div class="cmr-bkinfo-large cmr-font-bigger cmr-color-hui">${bookBrief}</div>
+				</aside>
+			</section>
+		</a>
+		</#if>
+	</#list>	
+</#macro>
+
+<#--展示角标方法-->
+<#-- 优先级 上传>限免>名家>会员>免费>完本 -->
+<#macro showCorner(book)>
+	<#assign isUgc = book.isUgc()!""><#-- 这本书是否是上传的 -->
+	<#assign timeInfo = book.getTimeFreeInfo("0")!"">
+	<#if timeInfo?? && timeInfo!="">
+	    <#assign timeResult = timeInfo.getAdapterResult()!"">
+	    <#assign timeType = timeInfo.getActivityType()!"">
+    <#else>
+	    <#assign timeResult = "">
+	    <#assign timeType = "">
+    </#if>
+	<#if timeInfo?? && timeResult=="0" && timeType=="5"><#-- 这本书是否限免 -->
+		<#assign isTimeFree = "true">
+	<#else>	
+		<#assign isTimeFree = "false">
+	</#if>
+	<#assign isFamous = (book.getAuthor().isFamous())!""><#-- 这本书是否名家 0:否;1:是;-->
+	<#assign bookNode = (book.getNode().getId())!"">
+	<#if bookNode!="" && bookNode!="590001121">
+		<#assign isMember ="true">
+	<#else>
+		<#assign isMember = "false">
+	</#if>
+	<#assign bookLevel = book.getBookLevel()!""><#-- 这本书是否免费 1:一级图书，即免费;-->
+	<#assign bookStatus = book.getStatus()!""><#-- 获取图书状态 0:连载;1:完本; -->
+	
+	<#if f_showIcon?contains("6") && isUgc><#-- 上传 -->
+		<i class="cmr-booktag-ugc cmr-icon-jue"></i>
+	<#elseif f_showIcon?contains("2") && isTimeFree=="true"><#--  限免 -->
+		<i class="cmr-booktag-limitfree cmr-icon-jue"></i>
+	<#elseif f_showIcon?contains("5") && isFamous=="1"><#-- 名家 -->
+		<i class="cmr-booktag-famous cmr-icon-jue"></i>
+	<#elseif f_showIcon?contains("3") && isMember=="true" ><#-- 会员 -->
+		<i class="cmr-booktag-member cmr-icon-jue"></i>
+	<#elseif f_showIcon?contains("1") && bookLevel=="1"><#-- 免费 -->
+		<i class="cmr-booktag-free cmr-icon-jue"></i>
+	<#elseif f_showIcon?contains("4") && bookStatus=="1"><#-- 完本 -->
+		<i class="cmr-booktag-finish cmr-icon-jue"></i>
+        <#elseif f_showIcon=="">
+      
+	</#if>
+</#macro>

@@ -1,0 +1,33 @@
+{
+    "pageData": {
+      "membercard_benefit":{
+           "pluginCode": "membercard_benefit",
+            "status": "200",
+            "isvisable": "1",
+            "data": {
+                "isAjax": "1",
+                "isMarginTop": "0",
+                "isMarginBottom": "0",
+                "isPaddingTop": "0",
+                "isShowLine": "0",
+                "cardCount": "1",
+                "expireCount": "1",
+                "totalPage": "2",
+                "currentPage": "1",
+                "richContent": "bbb",
+                "richContent": "ccc",
+                "richContent": "vvv",
+                "richContent": "bb",
+                "title": "体验卡使用明细",
+                "isUse": "0",
+                "submitUrl": "1"
+            }
+        }
+    },
+    "pageConfig": {
+        "ajaxHead": "http://localhost:8088",
+        "pageIndex": [
+          "membercard_benefit"
+        ]
+    }
+}

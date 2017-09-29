@@ -1,0 +1,258 @@
+<#--
+	BR003921、韩俊朋、20170725、新增碎片
+	新增数据源:
+		用户信息数据源:d_userInfo;
+        链接数据源:d_link;
+    碎片变量：
+        f_timeOut 【书券到期提醒】 文本框，非必填，默认“您有书券快到期，请尽快使用！”;
+        f_bookLei   【书券类型】  单选，1:已失效;2:未失效;3:已使用，必填，默认1;
+        f_Record  【无记录提示语】 输入框，非必填，默认“你还没有此类书券哦”;
+        f_pagesize  【每页展示条数】 文本框，非必填，默认10）pageSize;
+-->
+<!--fmName:书券充值记录_V7-->
+<#assign userAgent = request.getHeader("User-Agent")!"null">
+<#assign ln_num = 1>
+<#if d_link??>
+	<#assign linkUrl = d_link.getUrl()! ""><#--获取底部链接-->
+	<#assign linkDesc = d_link.getDesc()! ""><#--获取底部描述-->
+	<#--<#assign linkUrl = util.processForView(linkUrl)! "">-->
+	<#assign fragmentId = request.getFragmentId()! "">
+	<#assign linkUrl = util.addLinkNo("${linkUrl}","${fragmentId}","L${ln_num}")! "">
+	<#assign ln_num= ln_num + 1>
+</#if>
+<#if f_value??>
+    <#assign f_timeOut = f_value.getValue("f_timeOut")! ""><#--获取书券到期提醒-->
+    <#assign f_pagesize = f_value.getValue("f_pagesize")! ""><#--获取每页展示条数-->
+    <#assign f_bookLei = f_value.getValue("f_bookLei")! ""><#--获取书券类型-->
+    <#assign f_Record = f_value.getValue("f_Record")! ""><#--获取无记录提示语-->
+</#if>
+<!--f_bookLei=${f_bookLei}-->
+<#if f_timeOut == "">
+    <#assign f_timeOut = "您有书券快到期，请尽快使用！">
+</#if>
+<#if f_pagesize == "">
+    <#assign f_pagesize = "10">
+</#if>
+<#assign f_pagesize = f_pagesize?number>
+<#if f_bookLei == "">
+    <#assign f_bookLei = "2">
+</#if>
+<#if f_Record == "">
+    <#assign f_Record = "你还没有此类书券哦">
+</#if>
+<#-- ---------上拉加载所需要的数据  开始--------- -->
+<#assign fragmentId = request.getFragmentId()!"null"><#-- 返回当前碎片的id -->
+<#assign d_pageNo = request.getParameter("page")!"1"><#-- 请求数据源，获取请求参数，获取页码 -->
+<#if d_pageNo=="" || d_pageNo=="null">
+  <#assign d_page = 1>  
+<#else>
+  <#assign d_page = d_pageNo?number><#--转换成number类型--> 
+</#if>
+<#assign currPage = d_page>
+<#assign nextPage = d_page + 1>
+<#assign purl_param = request.getParameter("purl")!"">
+<#-- ---------上拉加载所需要的数据  结束--------- -->
+<#assign myConsume = d_userInfo.getMyConsume()!"null"> <#--获取用户消费信息-->
+<#if myConsume !="" && myConsume !="null">
+<#if myConsume.getAccountBooks(d_page,f_pagesize,"${f_bookLei}")?? && myConsume.getAccountBooks(d_page,f_pagesize,"${f_bookLei}") !="" && myConsume.getAccountBooks(d_page,f_pagesize,"${f_bookLei}") !="null">
+	<#assign buyTicketInfo = myConsume.getAccountBooks(d_page,f_pagesize,"${f_bookLei}")><#--书券信息-->
+<#if buyTicketInfo != "" && buyTicketInfo !="null">
+	<#assign buyTicketRecordList = buyTicketInfo.getRecordList()!"null">
+	<#assign nextPageUrl = buyTicketRecordList.getNextPage()!"null">
+	<!--nextPageUrl=${nextPageUrl}-->
+	<#if buyTicketRecordList !="null" && buyTicketRecordList!="">
+		<#if buyTicketRecordList?size &gt; 0>
+				<#list buyTicketRecordList.getContent() as buyTicketRecord> <#--书券充值记录详情数据源-->
+					<#assign money = buyTicketRecord.getMoney()! ""><#--书券金额-->
+					<#assign remainAmount= buyTicketRecord.getRemainAmount()! ""><#--剩余书券-->
+					<#assign yymoney = money?c?number-remainAmount?c?number> <#--用掉的书券-->
+					<#assign d_type= buyTicketRecord.getType()!"0"><#--1赠送，2购买-->
+					<#assign sqstatus= buyTicketRecord.getStatus()! ""><#--0:已使用;1:部分使用;2:未使用;-->
+					<!--d_type=${d_type}-->
+					<#assign AccountBookType = buyTicketRecord.getAccountBookType()! ""><#--账本详情-->
+					<#assign getDetailUrl = buyTicketRecord.getDetailUrl()! ""><#--账本跳转链接-->
+					<#assign buyTime = buyTicketRecord.getBuyTime("yyyy-MM-dd")!"0"><#--使用开始时间-->
+					<#assign InvalidTime= buyTicketRecord.getInvalidTime ("yyyy-MM-dd")!"0"><#--结束时间-->
+					
+					<#assign nowTime = util.getTime("yyyyMMdd")! "null"><#--当前时间-->
+					<#assign time= buyTicketRecord.getInvalidTime ("yyyyMMdd")!"0"><#--最后-->
+					<#assign timeDay = buyTicketRecord.getInvalidTime("yyyy/MM/dd HH:mm:ss")!"0"><#--最后时间-->
+					<!--buyTime=${buyTime},InvalidTime=${InvalidTime}-->
+					<#call bian(f_bookLei)>
+				</#list>
+				<#-- 加载更多 start -->
+				<#assign nextPageUrl1 = util.addParam(nextPageUrl, "ol", "${fragmentId}")>
+				<#assign nextPageUrl2 = util.addParam(nextPageUrl1,"purl","${purl_param}")>
+				<#assign nextPageUrl3 = util.addParam(nextPageUrl2, "page", "${nextPage}")>
+				<#if nextPageUrl3?index_of('vt=3')!= -1>
+					<#assign bookNextPage4 = nextPageUrl3?replace('vt=3','vt=9')>
+				<#else>
+					<#assign bookNextPage4 = util.addParam(nextPageUrl3, "vt", "9")>
+				</#if>
+				<#assign nextPageData = "{'nextUrl':'${bookNextPage4}','currPage':'${currPage}','nextPage':'${nextPage}','fragmentId':'${fragmentId}'}">
+				<#if nextPageUrl!="" && nextPageUrl!="null" && (!nextPageUrl?contains('#')&&!nextPageUrl?contains('null'))>
+					<div class="spin">
+						<input id="downlazyLoad" type="hidden" value="${nextPageData}"/>
+					</div>
+				</#if>
+				<#-- 加载更多 end -->
+		<#else>
+			<div class="sq_meiy">
+				<img src="content/repository/ues/image/s109/booknone.png" alt="暂无书券">
+				<p>${f_Record}</p>
+			</div>
+		</#if>
+	<#else>
+		<div class="sq_meiy">
+			<img src="content/repository/ues/image/s109/booknone.png" alt="暂无书券">
+			<p>${f_Record}</p>
+		</div>
+	</#if>
+<#else>
+	<div class="sq_meiy">
+		<img src="content/repository/ues/image/s109/booknone.png" alt="暂无书券">
+		<p>${f_Record}</p>
+	</div>
+</#if>
+<#else>
+	<div class="sq_meiy">
+		<img src="content/repository/ues/image/s109/booknone.png" alt="暂无书券">
+		<p>${f_Record}</p>
+	</div>
+</#if>
+<#else>
+	<div class="sq_meiy">
+		<img src="content/repository/ues/image/s109/booknone.png" alt="暂无书券">
+		<p>${f_Record}</p>
+	</div>
+</#if>
+
+<#macro bian(tong)>
+	<#if tong =="2"><#--可用-->
+		<#if (nowTime?number) &lt; (time?number)><#--未过期-->
+			<div class="dd" style="display:none;">1</div>
+			<li class="sqzc" data-time="${timeDay}"><#--常规-->
+			<#--
+			<#if (time?number - nowTime?number) == 1>
+				<li class="sqsyt">
+			<#elseif (time?number - nowTime?number) &lt;5 || (time?number - nowTime?number) ==5>
+				<li class="sqkdq">
+			<#else>
+				<li class="sqzc" data-time="${timeDay}">
+			</#if>
+			-->
+			<div class="sqfl">
+				<#if yymoney ?? && yymoney!=0>
+					<div style="padding-top:4px;">
+				<#else>
+					<div>
+				</#if>
+				<span>${money}<i>元</i></span></br>
+				<#if yymoney ?? && yymoney!=0><span class="sqyyNum" style="margin-top:0.5rem">已用${yymoney}元</span></#if>
+				</div>
+			</div>
+			<div class="sqfr">
+				<div class="sqjlname">
+					<#if d_type=="2">购买书券
+						<#if InvalidTime!="2099-12-31" && (nowTime?number &lt; time?number) && sqstatus!="0">
+							<#if userAgent?upper_case?contains("ANDROID") ><#--安卓样式-->
+							<em class="andr_dai">代付</em>
+							<#else><#--ios样式-->
+								<em class="ios_dai">代付</em>
+							</#if>
+						</#if>
+					<#elseif d_type=="1"> 赠送书券
+					</#if>
+				</div>
+				<#--
+				<a href="${getDetailUrl}" style="position:relative;">
+					<i class="spand">${AccountBookType}月份签到明细</i>
+				</a>
+				-->
+				<div class="sqtime">使用期限：${buyTime} 至 ${InvalidTime}</div>
+			</div>
+			
+			</li>	
+		</#if>		
+	<#elseif tong =="3"><#--已使用-->
+		<li class="sqysy">
+			<div class="sqfl">
+			<#if yymoney ?? && yymoney!=0>
+				<div style="padding-top:4px;">
+			<#else>
+				<div>
+			</#if>
+			<span>${money}<i>元</i></span></br>
+			<#-- <#if yymoney ?? && yymoney!=0><span class="sqyyNum">已用${yymoney}元</span></#if> -->
+			</div>
+		</div>
+		<div class="sqfr">
+			<div class="sqjlname">
+				<#if d_type=="2">购买书券
+					<#if InvalidTime!="2099-12-31" && (nowTime?number &lt; time?number) && sqstatus!="0">
+						<#if userAgent?upper_case?contains("ANDROID") ><#--安卓样式-->
+							<em class="andr_dai">代付</em>
+						<#else><#--ios样式-->
+							<em class="ios_dai">代付</em>
+						</#if>
+					</#if>
+				<#elseif d_type=="1"> 赠送书券
+				</#if>
+			</div>
+			<#--
+			<a href="${getDetailUrl}" style="position:relative;">
+				<i class="spand">${AccountBookType}月份签到明细</i>
+			</a>
+			-->
+			<div class="sqtime">使用期限：${buyTime} 至 ${InvalidTime}</div>
+		</div>
+		</li>
+	<#elseif tong =="1"><#--已过期-->
+		<li class="sqysx" data-time=""><#--已失效-->
+		<div class="sqfl">
+		<#if yymoney ?? && yymoney!=0>
+			<div style="padding-top:4px;">
+		<#else>
+			<div>
+		</#if>
+			<span>${money}<i>元</i></span></br>
+			<#-- <#if yymoney ?? && yymoney!=0><span class="sqyyNum">已用${yymoney}元</span></#if> -->
+			</div>
+		</div>
+		<div class="sqfr">
+			<div class="sqjlname">
+				<#if d_type=="2">购买书券
+					<#if InvalidTime!="2099-12-31" && (nowTime?number &lt; time?number) && sqstatus!="0">
+						<#if userAgent?upper_case?contains("ANDROID") ><#--安卓样式-->
+							<em class="andr_dai">代付</em>
+						<#else><#--ios样式-->
+							<em class="ios_dai">代付</em>
+						</#if>
+					</#if>
+				<#elseif d_type=="1"> 赠送书券
+				</#if>
+			</div>
+			<#--
+			<a href="${getDetailUrl}" style="position:relative;">
+				<i class="spand">${AccountBookType}月份签到明细</i>
+			</a>
+			-->
+			<div class="sqtime">使用期限：${buyTime} 至 ${InvalidTime}</div>
+		</div>
+		</li>
+	</#if>
+</#macro>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

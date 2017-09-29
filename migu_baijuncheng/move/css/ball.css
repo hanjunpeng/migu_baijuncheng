@@ -1,0 +1,43 @@
+body,html{
+	margin:0;
+	padding: 0;
+}
+body{
+	background: #ccc;
+}
+.start{
+	width:100px;
+	height:50px;
+	border-radius: 50px 50px 0 0px;
+	position: absolute;
+	bottom: 0;
+	left:50%;
+	margin-left:-50px;
+	background: #060;
+	color:#fff;
+	line-height: 60px;
+	text-align: center;
+	font-size: 20px;
+	border:2px solid #060;
+	cursor:pointer;
+}
+.start:hover{
+	border:2px solid #f00;
+}
+.ball{
+	width:50px;
+	height:50px;
+	border-radius: 50%;
+	background: blue;
+	display: block;
+	box-shadow:2px 2px 5px 1px rgba(0,0,0,.5);
+	background:radial-gradient(40% 40%,#0F0,#066);
+	background:-webkit-radial-gradient(40% 40%,#0F0,#066);
+	text-align: center;
+	font-size: 20px;
+	color:#fff;
+	line-height: 50px;
+	position: absolute;
+	left:0;
+	top:0;
+}

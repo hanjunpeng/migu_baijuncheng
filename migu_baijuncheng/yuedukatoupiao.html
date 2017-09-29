@@ -1,0 +1,75 @@
+<!--碎片：悦读咖_作家投票-->
+<#--BR002820 hanjunpeng start-->
+<#--  
+      数据源：
+      			d_pic1,图片数据源1
+      			d_pic2,图片数据源2
+      			d_pic3,图片数据源3
+      			d_ballot,投票数据源
+      碎片变量:
+      			title_text,标题文本（输入框）
+               
+-->
+<#assign title_text="">
+<#if f_value??>
+ 	 <#assign title_text=f_value.getValue('title_text')!""><#--标题文本-->
+	 <#assign di_action=f_value.getValue('di_action')!""><#--标题文本-->
+</#if>
+
+<#if d_pic1??>
+	<#assign pic1=d_pic1.getPicUrl()!""><#--获取图片-->
+</#if>
+<#if d_pic2??>
+	<#assign pic2=d_pic2.getPicUrl()!""><#--获取图片-->
+</#if>
+<#if d_pic3??>
+	<#assign pic3=d_pic3.getPicUrl()!""><#--获取图片-->
+</#if>
+
+<div class="green">
+	<#if title_text!="" && title_text !="null">
+	<div class="ydh-title"><span>${title_text}</span></div>
+	</#if>
+	<div class="ydh-votes ydh-public">
+		<#if d_ballot??>
+			<#assign ballotOption=d_ballot.getBallotList()![]><#--获取投票数据源对象-->
+
+			<#assign tpTotalNum=d_ballot.getTotalNum()!"0"><#--取总投票数-->
+			<!--han测试数据${tpTotalNum}-->
+			<#list ballotOption as option>
+                      <#if option_index &lt;3>
+			<#assign Title=option.getTitle()!""><#--作者名-->
+			<#assign totalNum=option.getTotalNum()!""><#--票数-->
+			<#assign totalUrl=option.getUrl()!""><#--链接地址-->
+			<div class="ydh-vauthor">
+				<#if option_index==0>
+				   <img src="${pic1}" alt=""/>
+				 <#elseif option_index==1>
+				   <img src="${pic2}" alt=""/>
+				 <#elseif option_index==2>
+				   <img src="${pic3}" alt=""/>
+				</#if>
+				
+				<p class="author_name">${Title}<i class="ydh-num">${totalNum}</i>票</p>
+				<#assign color = "#79bf57">
+				<#if option_index == 0>
+					<#assign color = "#79bf57">
+				<#elseif option_index == 1>
+					<#assign color = "#f5a100">
+				<#elseif option_index == 2>
+					<#assign color = "#00b9ef">	
+				</#if>
+				<p class="bg_bar" data-default-size="${tpTotalNum}" data-num="${totalNum}" data-color="${color}">
+					<span class="percent"></span>
+				</p>
+				<a href="javascript:;" class="go_vote" data-url="${totalUrl}" data-click="true">投ta一票</a>
+			</div>
+                      </#if>
+			</#list>
+		</#if>
+		</div>
+		<div class="ydh-place">
+			<span class="ydh-place-title">活动地点：<i style="color:yellow;">${di_action}</i></span>
+		</div>
+
+</div>

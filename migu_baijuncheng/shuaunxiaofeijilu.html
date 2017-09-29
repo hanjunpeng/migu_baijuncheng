@@ -1,0 +1,325 @@
+<#--
+	BR003921、韩俊朋、20170723、新增碎片
+	新增数据源:
+		用户信息数据源:d_userInfo;
+        链接数据源:d_link;
+    碎片变量：
+        f_noFree 【无消费记录文案】 文本框，非必填，默认“您本月暂无消费记录”;
+        f_isfouMoth  【是否按月结算】 单选，1:按月;2:全部，非必填，默认1;
+        f_showNum  【每页展示条数】 文本框，非必填，默认10）pageSize;
+-->
+<#--
+BR003986、王吉、20170809、新增判断计费模式为98时展示抽奖，等于99时则展示兑换
+-->
+<!--fmName:书券消费记录_V7-->
+<style>
+body{
+    background:#fcfcfc;
+}
+.zsPos{padding-bottom: 2rem;font-size: 0.73rem;text-align: center;color: #969fa9;position: relative;margin: 0;left: 0;bottom: 0;}
+</style>
+<#if f_value??>
+    <#assign f_noFree = f_value.getValue("f_noFree")!""><#--获取无消费记录文案-->
+    <#assign f_isfouMoth = f_value.getValue("f_isfouMoth")!""><#--获取是否按月结算-->
+    <#assign f_showNum = f_value.getValue("f_showNum")><#--获取每页展示条数-->
+</#if>
+<#if f_noFree == "">
+    <#assign f_noFree = "您本月暂无消费记录">
+</#if>
+<#if f_isfouMoth == "">
+    <#assign f_isfouMoth = "1">
+</#if>
+<#if f_showNum == "">
+    <#assign f_showNum = "10">
+</#if>
+<#assign f_showNum = f_showNum?number>
+<!--f_showNum=${f_showNum}-->
+<#if d_link??>
+    <#assign getDec = d_link.getDesc()!""><#--获取底部描述语--->
+</#if>
+<#if getDec = "">
+    <#assign getDec = "注：该查询记录仅供参考">
+</#if>
+<#-- ---------上拉加载所需要的数据  开始--------- -->
+<#assign fragmentId = request.getFragmentId()!"null"><#-- 返回当前碎片的id -->
+<input type="hidden" class="d_fragmentId" value="${fragmentId}">
+<#assign d_pageNo = request.getParameter("page")!"1"><#-- 请求数据源，获取请求参数，获取页码 -->
+<#if d_pageNo=="" || d_pageNo=="null">
+  <#assign d_page = 1>  
+<#else>
+  <#assign d_page = d_pageNo?number><#--转换成number类型--> 
+</#if>
+<#assign currPage = d_page>
+<#assign nextPage = d_page + 1>
+<#assign purl_param = request.getParameter("purl")!"">
+<#-- ---------上拉加载所需要的数据  结束--------- -->
+
+<#----获取月份日期时间--------->
+<#assign d_ftlTime = request.getParameter("ftl_time")!"null"><#--获取地址栏的ftl_time参数-->
+<#if d_ftlTime != "" && d_ftlTime != "null"><#--如果没有ftl_time参数 就不是本月 则获取时间如下-->
+    <#--获取月份日期第一天时间-->
+    <#assign sTime = "${d_ftlTime}01000000">
+    <#--获取月份日期最后的一天时间-->
+    <#assign eTime = util.getEndDateOfMonth("${d_ftlTime}","yyyyMMddHHmmss")>
+<#else>
+    <#--获取本月日期的第一天时间-->
+    <#assign sTime = util.getTime("yyyyMM01000000")>
+    <#--获取本月日期的最后一天时间-->
+    <#assign eTime = util.getEndDateOfMonth(util.getTime("yyyyMM"),"yyyyMMddHHmmss")>
+</#if>
+<#-----获取月份日期时间结束-------------------->
+
+<#if d_userInfo??>
+    <#assign myConsume = d_userInfo.getMyConsume()!"null"><#--获取我的消费-->
+    <#if f_isfouMoth =="1"><#--按月结算-->
+        <#assign consumeInfo = myConsume.getConsumeInfo(sTime,eTime,"3",f_showNum)!"null"><#--获取消费记录-->
+    <#else><#--安全部结算先不做-->
+        <#--  <#assign sTime = util.getTime("20000101000000")!"">  -->
+         <#--  <#assign eTime = util.getEndDateOfMonth(util.getTime("yyyyMM"),"yyyyMMddHHmmss")>  -->
+        <#assign consumeInfo = myConsume.getConsumeInfo(sTime,eTime,"3",f_showNum)!"null">
+    </#if>
+</#if>
+<#if consumeInfo!= "" && consumeInfo != "null">
+    <#assign d_totalFee = (consumeInfo.getTotalFee()!0)?number><#--获取本月总消费-->
+</#if>
+<#if consumeInfo != "" && consumeInfo != "null">
+    <#assign d_totalTicketFee = (consumeInfo.getTotalTicketFee()!0)?number><#--获取书券-->
+    <#assign d_PaymentFee = (consumeInfo.getThirdPartyPaymentFee()!"null")?number><#--第三方支付费用-->
+    <#assign consumeRecordList = consumeInfo.getRecordList()!"null"><#--获取消费详情-->
+	<#assign MobileCharge = (consumeInfo.getMobileCharge()! "")?number><#--话费-->
+	<!--d_PaymentFee =${d_PaymentFee}-->
+	<!--MobileCharge=${MobileCharge}-->
+    <#if consumeRecordList!="null">
+      <#assign tiaoshu=consumeRecordList.getTotalSize()!0>
+    <#else>
+      <#assign tiaoshu=0>
+    </#if>
+<div>
+    <div class="xf_record">
+        <div class="xf_record_right">
+            <div>
+                 <span>本月共计(元)：<i>#{d_totalFee;m2M2}</i></span><br>
+                <#-- <span>话费：<i>#{MobileCharge}</i></span><br> -->
+                <span>书券：<i>#{d_totalTicketFee;m2M2}</i></span><br/>
+                <span>其他支付：<i>#{(d_PaymentFee - MobileCharge);m2M2}</i></span> 
+            </div>
+        </div>
+        <div class="xf_record_left">
+            <#assign curTime = util.getTime("yyyyMMddHHmmss")!"null">
+            <div class="jsfs">按月结算</div>
+            <div class="jsrq">${util.addDate(sTime, 0, 1, "yyyy-MM dd HH时mm分ss秒")?substring(0,8)}</div>
+            <#assign time1=util.addDate(sTime, 0, 1, "yyyy-MM dd HH时mm分ss秒")?substring(0,4)>
+            <#assign time2=util.addDate(sTime, 0, 1, "yyyy-MM dd HH时mm分ss秒")?substring(5,8)>
+            <#assign time3=time1+time2>
+            <ul class="jsrq_inside" style="display:none;">
+                <li>${util.addDate(sTime, 0, 1, "yyyy-MM dd HH时mm分ss秒")?substring(0,8)}</li>
+                <#list 0..5 as number>
+                    <#if util.addDate(curTime, -number, 1, "yyyyMM dd HH时mm分ss秒")??>
+                        <#assign preMonth = util.addDate(curTime, -number, 1, "yyyy-MM dd HH时mm分ss秒")?substring(0,7)>
+                        <#assign preM = util.addDate(curTime, -number, 1, "yyyyMM")>
+                        <#assign  tab2=request.getParameter("tab2")!"null">
+                        <#assign time4=preMonth?substring(0,4)+preMonth?substring(5,7)>
+                        <li>
+                        <#if time3?contains(time4)>
+                                <a href="http://wap.cmread.com/rbc/p/xfjl.jsp?vt=3&ftl_time=${preM}&tab2=${tab2}" style="color: #3778ff;">
+                        <#else>
+                                <a href="http://wap.cmread.com/rbc/p/xfjl.jsp?vt=3&ftl_time=${preM}&tab2=${tab2}" >
+                        </#if>
+                        ${preMonth}
+                        </a>
+                        </li> 
+                    </#if>
+                </#list>  
+            </ul> 
+        </div>
+    </div>
+</#if>
+
+<#-------记录列表开始------->
+<!--myConsume=${myConsume},d_totalFee=${d_totalFee}-->
+<#if myConsume!="null"&&d_totalFee!=0>
+<splitnode id="${fragmentId}">
+    <#list consumeRecordList.getContent() as consumeRecord>
+                <!--consumeRecord=${consumeRecord?size}-->
+		<#assign d_realFee = consumeRecord.getRealFee()!0><#--总的-->
+		<!--d_realFee=${d_realFee}-->
+	    <#assign d_ticketFee = consumeRecord.getTicketFee()!0><#--书券-->
+		<!--d_ticketFee=${d_ticketFee}-->
+	    <#assign d_HF = d_realFee - d_ticketFee><#--话费-->
+	    <#assign d_chargeMode = consumeRecord.getChargeMode()!"0">
+		<!--d_chargeMode=${d_chargeMode}-->
+	    <#assign d_payMode = consumeRecord.getPayMode()!0><#--付款方式-->
+        <!--d_payMode=${d_payMode}-->
+        <div class="xf_record_li">
+            <div class="xf_record_right">
+				<div>
+				   <#if d_chargeMode == "100" >
+						<span>书券：<i>#{d_realFee;m2M2}</i></span>
+				   <#else>
+						
+						<#if d_ticketFee &gt; 0>
+							<span>书券：<i>#{d_ticketFee;m2M2}</i></span><#if d_HF &gt; 0><br><span><#if d_payMode == "8">话费<#else><#if d_payMode == "1">包月业务代付<#elseif d_payMode =="4">appstore支付<#elseif d_payMode =="5">绑定移动号码支付<#elseif d_payMode =="9">话费<#elseif d_payMode =="10">支付宝<#elseif d_payMode =="11">微信<#elseif d_payMode =="12">银行卡<#elseif d_payMode =="13">咪咕币<#elseif d_payMode =="14">收银台<#elseif d_payMode =="15">其他</#if></#if>：<i>#{d_HF;m2M2}</i></span>
+							</#if>
+						<#else>
+							<span>
+							<#if d_payMode == "1">包月业务代付<#elseif d_payMode =="4">appstore支付<#elseif d_payMode =="5">绑定移动号码支付<#elseif d_payMode =="8">书券<#elseif d_payMode =="9">话费<#elseif d_payMode =="10">支付宝<#elseif d_payMode =="11">微信<#elseif d_payMode =="12">银行卡<#elseif d_payMode =="13">咪咕币<#elseif d_payMode =="14">收银台<#elseif d_payMode =="15">其他</#if>：<i>#{d_realFee;m2M2}</i></span>
+						</#if>
+				   </#if>
+				</div>
+            </div>
+            <div class="record_li_left">
+                <div class="xf_name">
+                    <i>
+                    <#assign d_chargeMode = consumeRecord.getChargeMode()!"0">
+                    <!--d_chargeMode=${d_chargeMode}-->   
+                    <#if d_chargeMode == "1">充值   
+                        <#elseif d_chargeMode =="2">按章
+                        <#elseif d_chargeMode == "3">包月
+                        <#elseif d_chargeMode == "4">包月
+                        <#elseif d_chargeMode == "7">分册   
+                        <#elseif d_chargeMode == "15">赠送
+                        <#elseif d_chargeMode == "97">打赏
+                        <#elseif d_chargeMode == "100">补签
+						<#elseif d_chargeMode == "98">抽奖
+						<#elseif d_chargeMode == "99">兑换
+                    </#if>
+                    </i>
+                    ${consumeRecord.getContentName()}
+                </div>
+                <#assign chargeTime=consumeRecord.getChargeTime("yyyy-MM-dd HH:mm")!"null">
+                <div class="xf_time">消费时间：<#if chargeTime!="null">${chargeTime}</#if></div>
+            </div>
+        </div>
+    </#list>
+    <#-----上拉加载开始老方法------>
+    <#assign nextPageUrl = consumeRecordList.getNextPage()!"null">
+    <!--nextPage=${nextPage}-->
+    <#--  <#if nextPage!="null"> 
+    <#assign d_fragmentId = request.getFragmentId()>
+    <div id="more_${d_fragmentId}">
+    <span id="text_id2">
+    <div class="moreBox">                  
+            <div class='loading center mt10'>
+                <div class="loadbg spin"></div>
+            </div>              
+            <input type="hidden" id="loading" value="查看更多" class="more_button1"  divID="more_${d_fragmentId}" myurl="${util.addParam('${nextPage}', 'onlyRender','${d_fragmentId}')}" />
+    </div>
+    </span>
+    </div>
+    </#if>  -->
+    <#-------上拉加载结束---------->
+    <#-- 新方法 加载更多 start -->
+	<#assign nextPageUrl1 = util.addParam(nextPageUrl, "ol", "${fragmentId}")>
+	<#assign nextPageUrl2 = util.addParam(nextPageUrl1,"purl","${purl_param}")>
+	<#assign nextPageUrl3 = util.addParam(nextPageUrl2, "page", "${nextPage}")>
+	<#if nextPageUrl3?index_of('vt=3')!= -1>
+		<#assign bookNextPage4 = nextPageUrl3?replace('vt=3','vt=9')>
+	<#else>
+		<#assign bookNextPage4 = util.addParam(nextPageUrl3, "vt", "9")>
+	</#if>
+	<#assign nextPageData = "{'nextUrl':'${bookNextPage4}','currPage':'${currPage}','nextPage':'${nextPage}','fragmentId':'${fragmentId}'}">
+	<#if nextPageUrl!="" && nextPageUrl!="null" && (!nextPageUrl?contains('#')&&!nextPageUrl?contains('null'))>
+		<div class="spin">
+			<input id="downlazyLoad" type="hidden" value="${nextPageData}"/>
+		</div>
+	</#if>
+	<#-- 加载更多 end -->
+</splitnode>
+<!--nextPageUrl=${nextPageUrl}-->
+<div class="showOver">已显示全部</div>
+<#if nextPageUrl!="" && nextPageUrl!="null" && (!nextPageUrl?contains('#')&&!nextPageUrl?contains('null'))>
+	<div class="zs_text">${getDec}</div>
+<#else>
+	<div class="zs_te">${getDec}</div>
+</#if>
+
+    <script>
+    /*如果不存在tab切换碎片,则修改加载更多的id为loading*/
+    function xiugaiLoading1(){
+    var headNav1Tab=$(".headNav1.autoW li");
+    if(headNav1Tab.length==0){
+        $(".more_button1").eq(0).attr("id","loading");
+    }
+    }
+    setInterval(xiugaiLoading1,1000);
+    </script>
+<#else><#--为空状态-->
+    <#--没有消费记录-->
+    <#--  <#if d_link??>
+    <#assign link_prefix = d_link.getPrefix()!"">
+    <#assign link_url = d_link.getUrl()!"">
+    <#assign link_desc = d_link.getDesc()!""> 
+    <#else>
+    <#assign link_prefix = "">
+    <#assign link_url = "">
+    <#assign link_desc = "">
+    </#if>     
+    <div class="Recharge_kong_box">
+        <p>o(&gt;_&lt;)o</p>
+        <p><#if link_prefix!="">${link_prefix}</#if></p>
+        <p>
+        <#if link_desc!="" && link_desc!="null">
+        <#if link_url!="" && link_url!="null" && (!link_url?contains("/#")&&!link_url?contains("#?"))><a href="${link_url}" class="blue2">
+        <a href="http://wap.cmread.com/rbc/p/zonghesy.jsp?vt=3" class="blue2">
+        <#else>
+        <a class="blue2">
+        </#if>
+        ${link_desc}
+        </a>
+        <#else>
+        &nbsp;
+        </#if>
+        </p>
+    </div>  -->
+    <div class="Recharge_kong_box">
+        <img src="/rbc/t/content/repository/ues/image/s109/wuxiaofei.png" alt="暂无消费记录" style="width:6.27rem;">
+        <p>${f_noFree}</p>
+    </div>
+</#if>
+
+</div>
+<#--  <#if bottomUrl ?? && bottomUrl !="" && !bottomUrl?contains("/#") && !bottomUrl?contains("#?")>
+    <a href="${bottomUrl }">
+    <#else>
+    <a>
+</#if>
+<#if bottomDesc?? && bottomDesc !=""><div class="sqbottom">${bottomDesc }<i>&nbsp</i></div></#if></a>
+<div class="sqbottomkong"></div>  -->
+ <script type="text/javascript">
+$(function(){
+   $(".jsrq").click(function(){
+          if($(".jsrq_inside").css("display")!="none" ){
+              $(".jsrq_inside").hide();
+          }else{
+              $(".jsrq_inside").show();
+         }
+         e = window.event || oEvent;
+         if (e.stopPropagation)
+         {
+             e.stopPropagation();
+         }else{
+             e.cancelBubble = true;
+         }
+   });
+
+    $(document).click(function(){
+        $(".jsrq_inside").hide();
+    });
+
+    $(".jsrq_inside li").click(function(){
+        $(".jsrq").text($(this).text());
+        $(".jsrq_inside").hide();
+    });
+     var d_fragmentId = $(".d_fragmentId").val();
+     var xfrecord = $("#"+d_fragmentId).find('.xf_record_li').length;
+    if(xfrecord > 6){
+        $(".zs_text").addClass("zsPos");
+        $(".zs_te").addClass("zsPos");
+    }
+});
+</script>
+
+
+
+
+

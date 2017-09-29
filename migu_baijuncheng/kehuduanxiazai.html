@@ -1,0 +1,234 @@
+<#--
+	碎片变量:isCompanRed  【是否用于企业阅读客户端】0否1是；
+	         f_isShowqiMigu 【是否唤起咪咕阅读客户端】 1是2否；
+			 f_isFuJiaReadCan 【是否附加企业阅读参数】 1是2否；
+-->
+<style>
+	.actionbg a{display:block;}
+</style>
+<!--客户端下载碎片-->
+<#assign userAgent = request.getHeader("User-Agent")!"null">
+<div id="userAn" style="display:none;">${userAgent}</div>
+<#assign enterpriseId = request.getParameter("enterpriseId")!"null">
+<#if enterpriseId=="">
+	<#assign enterpriseId = "">
+</#if>
+<div id="enterpriseId" style="display:none;">${enterpriseId}</div>
+<#assign iphon = (user.getUserInfo().getAccount())!""><#--获取手机号-->
+
+<div id="iphon" style="display:none;">${iphon}</div>
+
+<#assign upperUa = userAgent?upper_case>
+<#assign url=''>
+<#assign isCompanRed="">
+<#assign isDisplay = request.getParameter("isDisplay") !""><#--获取request的isDisplay参数-->
+<#assign tokenid = user.getToken() !""><#--获取tokenid的参数-->
+<#assign d_androidUrl = "wap.cmread.com/rbc/p/zonghesy.jsp?vt=3"><#--安卓的地址-->
+<#assign d_IosUrl = 'json={"activity":{"url":"http://wap.cmread.com/rbc/p/zonghesy.jsp?vt=3"}}&amp;contentId=402070843'><#--ios的地址-->
+<#assign shareType = request.getParameter("shareType")!"null">
+<!--shareType=${shareType}-->
+
+<#if userAgent?upper_case?contains("ANDROID") ><#--ANDROID安卓客户端-->
+	<#if userAgent?contains("MicroMessenger") || userAgent?contains("Weibo")>
+		<#assign url=d_wxandroid.getContent()!''><#--微信安卓-->
+	<#else>
+		<#assign url=d_ptandroid.getContent()!''><#--普通安卓-->       
+	</#if>
+<#elseif userAgent?upper_case?contains("IPHONE")><#--iphone客户端-->
+	<#if userAgent?contains("MicroMessenger") || userAgent?contains("Weibo")>
+		<#assign url=d_wxios.getContent()!''><#--微信iphone-->              
+	<#else>
+		<#assign url=d_ptios.getContent()!''><#--普通iphone-->
+	</#if>
+</#if>
+
+<#if f_value??>
+	<#assign isCompanRed = f_value.getValue("isCompanRed")!""><#--是否用于企业阅读0否1是-->
+	<#assign isShowqiMigu = f_value.getValue("f_isShowqiMigu")!""><#--是否唤起咪咕客户端1是2否-->
+	<#assign isFuJiaReadCan = f_value.getValue("f_isFuJiaReadCan")!""><#--是否附加企业阅读参数1是2否-->
+	<#assign showFail = f_value.getValue('showFail')!"1"><#--1:跳转下载页;2:不跳转;默认:1;-->
+</#if>
+
+<#--hanjunpeng 客服端策反优化 判断展示与否 statr-->
+<#if isCompanRed =='1'><#--企业阅读-->
+	<#if isShowqiMigu=="1"><#--唤起咪咕客户端-->
+		<#if isDisplay == '0'><#--如果是0表示从咪咕客户端到企业客户端这时就不用展示下载了-->
+	
+		<#else>
+			<#if isFuJiaReadCan=="1"><#--附加参数-->
+			    <div id="canshu" style="display:none" data-url="http://wap.cmread.com/hywap/f/addInvokeMiguReaderParameter?InvokeSource=6&InvokeType=1&ClientType=1&tokenid=${tokenid}"></div><#--传参数给行业-->
+				
+				<#assign d_androidUrl = d_androidUrl+'&isFromQxt=1'><#--安卓的唤起地址-->
+				<#--
+				<#assign d_IosUrl = d_IosUrl+'&u_isFromCoApp=1'>
+				-->
+				
+				<#assign d_IosUrl = 'json = {"activity": {"url":"http://wap.cmread.com/rbc/p/zonghesy.jsp?vt=3"},"invoke":{"u_isFromCoApp":"1"}}&amp;contentId=402070843'>
+				
+				<div class="actionbg">
+					<a href="javascript:;" onclick="clickStartButton()"><#--安卓调用-->
+						
+						<#if d_img??>
+							<#if d_img.getPicUrl()??>
+							<img src="${d_img.getPicUrl()}">
+								<#else>
+							<#-- BR001909、钱克、修改图片地址为相对路径、20170307 -->
+							<img src="/rbc/p/content/repository/ues/image/s109/dowload.jpg">
+							</#if>
+						<#else>
+							<img src="/rbc/p/content/repository/ues/image/s109/dowload.jpg">
+						</#if>
+					</a>
+				</div>
+			<#else>
+				<div class="actionbg">
+					<a href="javascript:;" onclick="startMiguClient('6',null)" ><#--安卓调用-->
+						<#if d_img??>
+							<#if d_img.getPicUrl()??>
+							<img src="${d_img.getPicUrl()}">
+								<#else>
+							<#-- BR001909、钱克、修改图片地址为相对路径、20170307 -->
+							<img src="/rbc/p/content/repository/ues/image/s109/dowload.jpg">
+							</#if>
+						<#else>
+							<img src="/rbc/p/content/repository/ues/image/s109/dowload.jpg">
+						</#if>
+					</a>
+				</div>
+			</#if>
+		</#if>
+	</#if>	
+<#else>
+	<div class="actionbg">
+	<a href="${url}">
+		<#if d_img??>
+			<#if d_img.getPicUrl()??>
+			<img src="${d_img.getPicUrl()}">
+				<#else>
+			<#-- BR001909、钱克、修改图片地址为相对路径、20170307 -->
+			<img src="/rbc/p/content/repository/ues/image/s109/dowload.jpg">
+			</#if>
+		<#else>
+			<img src="/rbc/p/content/repository/ues/image/s109/dowload.jpg">
+		</#if>
+	</a>
+	</div>
+</#if>
+<#--hanjunpeng 客服端策反优化 判断展示与否 end-->
+<a href="#" id="startClient"></a>
+
+<div style="display:none" id="androidUrl">${d_androidUrl}</div><#--安卓的唤起地址-->
+<div style="display:none" id="IOSUrl">${d_IosUrl}</div><#--ios的唤起地址-->
+<div style="display:none" id="downUrl">${url}</div><#--下载客户端-->
+<#if  userAgent?upper_case?contains("IPHONE") ||  userAgent?upper_case?contains("IOS")><#--操作系统是IPHONE-->
+	   <script type="text/javascript">		   
+		function clickStartButton(){
+		var ajaxurl = $("#canshu").attr("data-url");
+		console.log(ajaxurl);
+		var ua = $("#userAn").html();
+		var enterprise = $("#enterpriseId").html();
+		var iphon = $("#iphon").html();
+		console.log(ua,enterprise,iphon);
+		$.ajax({
+			url:ajaxurl,
+			type:"post",
+			beforeSend: function(request) {
+				request.setRequestHeader("x-enterprise-Id", enterprise);
+				request.setRequestHeader("x-cmread-msisdn", iphon);
+				request.setRequestHeader("terminalUniqueId", "");
+				request.setRequestHeader("IDFA", "");
+			},
+			success:function(data,request){
+			},
+			error:function(){
+				cosole.log("a");
+			}
+		});
+		var d_androidUrl= $("#androidUrl").text();
+		var d_IosUrl= $("#IOSUrl").text();      
+		var d_downUrl= $("#downUrl").text();	
+		RevisionStartClient("2", d_androidUrl,d_IosUrl,d_downUrl,'${showFail}','${shareType}');
+		}			
+		</script>
+	<#else>
+		<script type="text/javascript">
+		function clickStartButton(){
+		var ajaxurl = $("#canshu").attr("data-url");
+		console.log(ajaxurl);
+		var ua = $("#userAn").html();
+		var enterprise = $("#enterpriseId").html();
+		var iphon = $("#iphon").html();
+		console.log(ua,enterprise,iphon);
+		$.ajax({
+			url:ajaxurl,
+			type:"post",
+			beforeSend: function(request) {
+				request.setRequestHeader("x-enterprise-Id", enterprise);
+				request.setRequestHeader("x-cmread-msisdn", iphon);
+				request.setRequestHeader("terminalUniqueId", "");
+				request.setRequestHeader("IDFA", "");
+			},
+			success:function(data,request){
+			},
+			error:function(){
+				cosole.log("a");
+			}
+		});
+		var d_androidUrl= $("#androidUrl").text();
+		var d_IosUrl= $("#IOSUrl").text();
+		var d_downUrl= $("#downUrl").text();
+		RevisionStartClient("1", d_androidUrl,d_IosUrl,d_downUrl,'${showFail}','${shareType}');
+		}
+		</script>
+</#if>
+
+<#--clientType参数区分android和ios，androidUrl安卓的唤醒地址，IosUrl ios唤醒地址 downUrl下载地址 showFail参数下载按钮--->
+<script type="text/javascript">
+function RevisionStartClient(clientType, androidUrl, IosUrl, downUrl,showFail,shareObj) {
+	/*QX2016-002867 去掉自动功能 让用户自己点*/
+	/*BR001574、王吉、20160822、开放唤起根据碎片变量控制*/
+   	if (clientType == "1") {
+			var forwardUrl = "cmread://cmread.com/client?url=" + encodeURIComponent(androidUrl);
+			var ifr = document.createElement('iframe');
+				ifr.src = forwardUrl;
+				ifr.style.display = 'none';
+			document.body.appendChild(ifr);
+			
+   		downUrl = downUrl.replace(/&amp;/g,'&');
+		if(downUrl=="" || downUrl==null){
+		}else{
+			var t = Date.now();
+			if(showFail && showFail == "1"){
+			setTimeout(function(){
+				document.body.removeChild(ifr);
+				window.location.href = downUrl;
+			},1000);
+		}		
+	}
+	} else {
+		if (IosUrl == "") {
+			var forwardUrl = "cmread://cmread.com/client";
+		} else {
+			var forwardUrl = "cmread://cmread.com/client?" + IosUrl;
+		}
+		if(shareObj !="7"){
+			$("#startClient").attr("href",forwardUrl);
+			$("#startClient").click();
+		};
+		if(downUrl=="" || downUrl==null){
+		}else{
+			var t = Date.now();
+			if(showFail && showFail == "1"){
+			setTimeout(function(){
+				$("#startClient").attr("href",downUrl);
+				$("#startClient").click();
+			},1000);
+		}		
+	}
+	}
+};
+	
+
+</script>
+
+

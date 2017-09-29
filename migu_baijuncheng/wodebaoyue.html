@@ -1,0 +1,483 @@
+<style>
+.Recharge_kong_box{
+margin:47px auto 80px;
+text-align:center;
+}
+.Recharge_kong_box p:first-child{
+margin-bottom:25px;
+}
+.subTitle a.rBtn{
+width:auto;
+min-width:2.2rem;
+height:1.67rem;
+display：inline-block;
+line-height:1.67rem ! important;
+font-size:0.86rem;
+padding:0 0.9rem;
+margin-top: 0.7rem;
+box-sizing:border-box;
+}
+.Recharge_kong_box p{
+	font-size:16px;
+	margin-top:10px;
+	color:#aeaeae;
+}
+.showOver{
+	color:#aeaeae;
+	font-size:11px;
+	text-align:center;
+	height:30px;
+	line-height:30px;
+	margin-top:10px;
+	display:none;
+}
+.arrowa{
+	display: inline-block;
+	border:1px solid #3778ff;
+	border-left:none;
+	border-bottom:none;
+	transform:rotate(45deg);
+	-webkit-transform:rotate(45deg);
+	width:0.5rem;
+	height:0.5rem;
+	top:-0.05rem;
+}
+.null_box{
+text-align:center;
+margin-top:13.67rem;
+}
+.null_box .cmr-font-bigger{
+padding:0 22%;
+color:#969FA9;
+}
+.bz3L{
+    padding: 0 0.8rem;
+}
+.bz3L li .shadowa{
+width:6.33rem;
+margin:0.2rem auto 0.53rem;
+text-align:left;
+overflow:hidden;
+display:-webkit-box;
+text-overflow:ellipsis;
+-webkit-box-orient:vertical;
+-webkit-line-clamp:2;
+color:#323232;
+position:relative;
+}
+/*第六套安卓包月*/
+.pop_c{
+	top:0 !important;
+	-webkit-transform:translateY(0%) !important;
+}
+.pop_text{
+	padding:1.33rem !important;
+}
+.pop_btn a, .pop_btn .gbtnB, .pop_btn .gbtnW{
+	border-right:0px solid #b2b2b2 !important;
+	display:inline-block !important;
+	width:49%;
+}
+.cmr-blkUser-warnText{
+    padding: 0 0 1rem 1.33rem;
+    color: #989fa8;
+    background: #fff;
+    font-size: 0.8rem;
+    position: relative;
+    top: -0.8rem;
+}
+/*获取周期包时间*/
+.prebag-time{height:3.2rem;line-height:3.2rem;display:box;display:-webkit-box;padding:0 1.33rem;color:#989fa8;padding-bottom:0.6rem;margin-top:-0.3rem;position:relative;z-index:1;background:#fff;}
+.pret-left{box-flex:2;-webkit-box-flex:2;line-height:50%;height:100%;padding-top:0.2rem;}
+.pret-left .time-item{height:1.4rem;line-height:1.4rem;}
+.pret-right{box-flex:1;-webkit-box-flex:1;height:50%;text-align:right;height:100%;}
+</style>
+<#--hanjunpeng新增我的包月-->
+<#-- 20170627、钱克、修改空状态样式 -->
+<#--
+	碎片变量：Sequence【包内图书排序】1:更新时间;2:上架时间;3:入库时间;
+			  booktype【包月类型】0:全部;1:图书;2:漫画;3:听书;5:杂志;
+			  unsubscribeBtn【是否展示退订按钮】1:是;2:否;
+			  showNum 【展示条数】
+			  showScene【是用场景IOS】1:会员中心;2:我的包月;
+			  againBuy【重新订购提示语】非本手机购买，退订后需要至安卓手机才可重新订购
+			  ios_subscribe【IOS低版本开通会员提示语】您的APP暂不支持开通会员，请更新至最新版本
+	碎片数据源：d_textzq：配置关于低版本ios跳转到appstore地址；
+				d_link：配置包月详情页地址；
+				d_link1：去书城逛逛；
+				d_userInfo:用户信息数据源；
+				d_text；文本数据源；
+                d_books:内容列表数据源 全站包相关配置 BR003722
+-->
+<!--fmName:我的包月-->
+<input type="hidden" id="gettoken"  value="${user.getToken()}" />
+<#assign booktype="0"><#--包月类型-->
+<#assign Sequence="1"><#--包内图书排序-->
+<#assign showNum="">
+<#assign unsubscribeBtn="2"><#--是否展示退订按钮1是2否-->
+<#if f_value??>
+	<#if f_value.getValue("Sequence")?? && f_value.getValue("Sequence")!="">
+		<#assign Sequence=f_value.getValue("Sequence")><#--包内图书排序-->
+	<#else>
+		<#assign Sequence="1">
+	</#if>
+	<#if f_value.getValue("booktype")?? && f_value.getValue("booktype")!="">
+		<#assign booktype=f_value.getValue("booktype")><#--包月类型-->
+	<#else>
+		<#assign booktype="0">
+	</#if>
+	<#if f_value.getValue("unsubscribeBtn")?? && f_value.getValue("unsubscribeBtn")!="">
+		<#assign unsubscribeBtn=f_value.getValue("unsubscribeBtn")><#--包月类型-->
+	<#else>
+		<#assign unsubscribeBtn="2">
+	</#if>
+	<#assign showNum=f_value.getValue("showNum")! ""><#--展示条数-->
+</#if>
+<#if showNum=="">
+	<#assign showNum="3">
+</#if>
+<#-- ---------上拉加载所需要的数据  开始--------- -->
+<#assign fragmentId = request.getFragmentId()!"null"><#-- 返回当前碎片的id -->
+<#assign d_pageNo = request.getParameter("page")!"1"><#-- 请求数据源，获取请求参数，获取页码 -->
+<#if d_pageNo=="" || d_pageNo=="null">
+  <#assign d_page = 1>
+<#else>
+  <#assign d_page = d_pageNo?number><#--转换成number类型-->
+</#if>
+<#assign currPage = d_page>
+<#assign nextPage = d_page + 1>
+<#assign purl_param = request.getParameter("purl")!"">
+<#-- ---------上拉加载所需要的数据  结束--------- -->
+<#assign nodeid = request.getParameter("nid")! "">
+<section id="${fragmentId}">
+<#if d_userInfo??><#--用户信息数据源-->
+	<input type="hidden" id="fromMyPage"  value="1" />
+	<#assign mySubscription = d_userInfo.getMySubscription()!"null">
+	<#if mySubscription!="null" && mySubscription!="">
+		<#if request.getParameter("page")?? && request.getParameter("page")!=""><#--获取URL中page-->
+			<#assign pageNo = request.getParameter("page")?number>
+		<#else>
+			<#assign pageNo = 1>
+		</#if><!-- pageNo:${pageNo} -->
+		<#assign d_monthLyList = mySubscription.getMonthlyList(showNum?number,0)!"null">
+		<#--<#if booktype=="0">全部
+			<#assign d_monthLyList = mySubscription.getMonthlyList (pageNo,3,0,"")!"null">
+		<#else>
+			<#assign d_monthLyList = mySubscription.getMonthlyList(pageNo,3,0,booktype)!"null">
+		</#if>-->
+		<#if d_monthLyList!="null" && d_monthLyList!="">
+		    <#assign totalSize= d_monthLyList.getTotalSize()!0>
+			<#assign nextPageUrl = d_monthLyList.getNextPage()!"null">
+			<#if d_monthLyList.getContent()?? &&(d_monthLyList.getContent()?size > 0)&&	(totalSize > 0)>
+
+				<#list d_monthLyList.getContent() as subNode>
+
+				  <#if subNode!="null" && subNode!="">
+				   <#assign d_subNode = subNode.getNode()!"null">
+				   <#assign nodeStatus = subNode.getStatus()! ""><#-- br004051 lyf 0822 --> nodeStatus:${nodeStatus};
+				    <#assign nodeId = d_subNode.getId()!"null">nodeId :${nodeId};
+					<#if nodeId !="590002079"><#--BR003376 caihong 20170516 屏蔽大站包-->
+					<#--BR001893 吴海瑞 20161125 按需隐藏包月退订按钮-->
+					<#assign PayType = subNode.getPayType()!"null">
+
+					<#--yxf,br002916,20170511,包月类型判断12时不展示退订-->
+					<#--SpecificProductType:返回包月类型：
+					0普通包月，1三元包月，2五元包月, 6添加书券包月, 8杂志品牌包月,3打折促销产品，4特价促销产品，5打包促销产品，12周期包月
+					-->
+					<#assign SpecificProductType=subNode.getSpecificProductType()!''>
+					<#if subNode.getNode().getNodeFee()??>
+						<#assign nodeFee = subNode.getNode().getNodeFee()!"null">
+					<#else>
+						<#assign nodeFee="null">
+					</#if>
+					<#assign d_subNode = subNode.getNode()!"null">
+
+					<#assign url = "">
+					<#if d_subNode!="null" && d_subNode!="">
+						<#assign url = d_subNode.getUrl()!"null">
+
+						<#assign d_bookList = d_subNode.getTopBookList("-1","${Sequence}",3)!"null">
+						<#if d_bookList!="null" && d_bookList!="" && (d_bookList.getTotalSize()>0)>
+							<#if d_bookList.getContent()[0]?? && d_bookList.getContent()[0]!="" && d_bookList.getContent()[0]!="null">
+								<#assign bookType = d_bookList.getContent()[0].getContentType()><#--1：书籍,2：漫画,3：杂志,5：听书,7: 报纸-->
+								<#if bookType == "2">
+									<#assign url = url?replace('/rbc/','/cbc/')>
+								<#elseif bookType == "3">
+									<#assign url = url?replace('/rbc/','/mbc/')>
+								<#elseif bookType == "7">
+									<#assign url = "">
+								</#if>
+							</#if>
+						<#else>
+							<#assign url = "">
+							<#-- 如果d_bookList不存在或者size为0重置url为,"",用于下面判断是否显示包月名称 UESFTL-4460 -->
+						</#if>
+					</#if>
+					<#if url != "null" && url!="">
+						<div class="subTitle">
+					<#else>
+					      <!--  <div class="subTitle" style="padding-bottom:2%;">  -->
+                                               <div class="subTitle">
+					</#if>
+							<span class="cuti fl">
+                                <#--BR003722 全站包单独处理-->
+                                <#assign bagtitle=""> <#--包名-->
+								<#if nodeFee?? && nodeFee!="null">
+                                    <#assign bagtitle=nodeFee.getAdaptName()>
+                                    <!--getAdaptName:${bagtitle}-->
+	   							<#else>
+                                    <#assign bagtitle=subNode.getNode().getName()>
+                                    <!--getName:${bagtitle}-->
+								</#if>
+                                ${bagtitle}
+							</span>
+							<#if subNode.getSubType()=="3"><#--如果是包月预缴-->
+
+								<#if subNode.isDisplayUnsubscribe()>
+
+									<#assign cancelUrl =util.addParam('${subNode.getNode().getNodeFee().getMonthCancelConfirmUrl()}', 'tokenid','${request.getParameter("tokenid")}')>
+									<#assign d_newCancelUrl = cancelUrl?replace("&amp;","&")>
+									<#if nodeFee?? && nodeFee!="null">
+										<#if nodeFee.getSubStatus()=="2">
+											<a class="rBtn fr">已订购，退订中</a>
+										<#else>
+										<#--yxf,br002916,20170511,增加包月类型判断-->
+										<#if SpecificProductType=='12' || unsubscribeBtn=='2'><#--1展示2不展示-->
+											<#--包月类型为12，不展示退订-->
+										<#elseif unsubscribeBtn!="2" && PayType!="0" && PayType!="5" && PayType!="210" && PayType!="214">
+										<#--BR001893 吴海瑞 20161125 按需隐藏包月退订按钮-->
+
+										<a href="javascript:;"  onclick = "monUnsub('${d_newCancelUrl}&newWebview=1')" style="border:1px solid #3778ff;" class="rBtn fr">退 订</a>
+										</#if>
+										</#if>
+									<#else>
+									<#--yxf,br002916,20170511,增加包月类型判断-->
+										<#if SpecificProductType=='12' || unsubscribeBtn=='2'>
+											<#--包月类型为12，不展示退订-->
+										<#elseif unsubscribeBtn!="2" && PayType!="0" && PayType!="5" && PayType!="210" && PayType!="214">
+											<#--BR001893 吴海瑞 20161125 按需隐藏包月退订按钮-->
+											<a href="javascript:;"  onclick = "monUnsub('${d_newCancelUrl}')" style="border:1px solid #3778ff;" class="rBtn fr">退 订</a>
+										</#if>
+									</#if>
+								<#else>
+
+									<em class="rBtn fr">
+										<#if subNode.getNode()??>
+											<#assign node1 = subNode.getNode()>
+											<#assign nodeId = node1.getId()>
+										</#if>
+										<#if subNode.getSubListDesc()??>
+											<#assign d_i = subNode_index>
+											<#if d_text??&&d_text.getContent()?? && d_text.getContent()!="" && nodeId =="381604744">
+												<#--${d_text.getContent()}元/月，-->
+												${subNode.getSubListDesc()}
+											<#else>
+												<#--${subNode.getNode().getNodeFee().getFee()}元/月，-->
+												${subNode.getSubListDesc()}
+											</#if>
+										<#else>
+											<#if d_text??&&d_text.getContent()?? && d_text.getContent()!="" && nodeId =="381604744">
+												${d_text.getContent()}元/月
+											<#else>
+												${subNode.getNode().getNodeFee().getFee()}元/月
+											</#if>
+										</#if>
+									</em>
+								</#if>
+							<#else><#--如果是非包月预缴-->
+
+								<#assign cancelUrl =util.addParam('${subNode.getNode().getNodeFee().getMonthCancelConfirmUrl()}', 'tokenid','${request.getParameter("tokenid")}')>
+								<#assign d_newCancelUrl = cancelUrl?replace("&amp;","&")>
+								<#if nodeStatus == "1">
+									<#--yxf,br002916,20170511,增加包月类型判断-->
+									<#if SpecificProductType=='12' || unsubscribeBtn=='2'>
+
+										<#--包月类型为12，不展示退订-->
+									<#elseif unsubscribeBtn!="2" && PayType!="0" && PayType!="5" && PayType!="210" && PayType!="214">
+									<#--BR001893 吴海瑞 20161125 按需隐藏包月退订按钮-->
+										<a href="javascript:;" style="border:1px solid #3778ff;" onclick = "monUnsub('${d_newCancelUrl}')"  class="rBtn fr">退 订</a>
+									</#if>
+								<#else>
+									<a href="javascript:;" style="border:1px solid #c3ced9;color:#969fa9;"  class="rBtn fr">支付确认中</a>
+								</#if>
+							</#if>
+						</div>
+						<#--退订结束-->
+
+						<!-- BR004227  获取周期包时间 start -->
+										<#if subNode.isRepeat()>
+										<#assign startTime=subNode.getStartTime('yyyy-MM-dd HH:mm:ss')!"">
+										<#assign endTime=subNode.getEndTime('yyyy-MM-dd HH:mm:ss')!"">
+										<#assign price=subNode.getCircleProductPrice()!"-">
+										<#assign lastDay=subNode.getCircleProductTime()!"-">
+									<section class="prebag-time cmr-font-bigger">
+										<div class="pret-left">
+											<p class="time-item">订购时间:${startTime}</p>
+											<p class="time-item">到期时间:${endTime}</p>
+										</div>
+										<div class="pret-right" style="display:none;">
+											${price}元/${lastDay}天
+										</div>
+									</section>
+									</#if>
+
+
+						<#-- BR004227  获取周期包时间  end	-->
+						<#--BR003722 全站包单独处理-->
+						
+				  <#if nodeStatus == "10">
+					<div class="cmr-blkUser-warnText">微信支付确认中，暂不享有包月权益</div>
+				  <#else>
+					<#if bagtitle?index_of("全站")!=-1>
+						<!--判断是全站包-->
+						<div class="tbox">
+							<div class="pic-box">
+							<#if d_books.getBookList()??>
+								<#list d_books.getBookList().getContent() as book>
+									<#assign coverLogo = book.getCoverLogo("2", "1")!"">
+									<#assign bookName =book.getShowName()!"">
+									<#if book.getAuthor()??>
+									<#assign penName =book.getAuthor().getPenName()!"">
+									<#else>
+									<#assign penName ="">
+									</#if>
+									<#assign bookUrl = book.getUrl()!"">
+									<div class="pic-item">
+										<a href="${bookUrl}">
+											<div class="pic-imgitem">
+											<i class="cmr-icon cmr-migu-icon cmr-migubg-large"></i>
+											<img class="book-cover" data-src="${coverLogo}">
+											</div>
+											<span class="book-name2 cmr-font-big"  style="margin-bottom:0.46rem;">${bookName}</span>
+										</a>
+									</div>
+								</#list>
+							</#if>
+							</div>
+							<#--更多包月图书开始 全站包的时候重新取url-->
+							<#if d_subNode??>
+								<#assign url = d_subNode.getUrl()!"null">
+							</#if>
+							<#if url?? && url!="">
+								<a href="${url}" class="listmore" style="border-top:1px solid #f0f0f0">
+							<#else>
+								<a class="listmore">
+							</#if>
+							<span>更多包月图书<em class="arrowa"></em></span>
+								</a>
+							<#--更多包月图书结束-->
+						</div>
+					<#else>
+						<#if url != "null" && url!="">
+                            <#--如果不是全站包-->
+    						<#if d_bookList!="null" && d_bookList!="">
+    							<#if (d_bookList.getTotalSize()>0)>
+    								<div class="tbox">
+    									<div class="pic-box">
+    										<#list d_bookList.getContent() as book>
+    										<div class="pic-item">
+    											<#if book.getUrl()?? && book.getUrl()!="">
+    												<a href="${book.getUrl()}">
+    											<#else>
+    												<a>
+    											</#if>
+    											<#assign coverlogo_2 = book.getCoverLogo("2", "1")!"null">
+    											<div class="pic-imgitem">
+    												<i class="cmr-icon cmr-migu-icon cmr-migubg-large"></i>
+    												<img class="book-cover" data-src="${coverlogo_2}">
+    											</div>
+    											<span class="book-name2 cmr-font-big" style="margin-bottom:0.46rem;">${book.getShowName()}</span>
+    											</a>
+    										</div>
+    										</#list>
+    									</div>
+    									<#--更多包月图书开始-->
+    									<#if url?? && url!="">
+    										<a href="${url}" class="listmore" style="border-top:1px solid #f0f0f0">
+    									<#else>
+    										<a class="listmore">
+    									</#if>
+    									<span>更多包月图书<em class="arrowa"></em></span>
+    										</a>
+    									<#--更多包月图书结束-->
+    								</div>
+    							</#if>
+    						</#if>
+                        </#if>
+					</#if>
+				  </#if>
+				<#elseif totalSize ==1 && (nodeId =="590002079")>
+					<div class="null_box">
+						<div class="cmr-font-bigger">
+
+				       您还未开通包月，可进入会员中心获取更多信息。
+
+
+				</div>
+				</div>
+					</#if>
+					</#if>
+				</#list>
+				<#-- 加载更多 start -->
+				<#assign nextPageUrl1 = util.addParam(nextPageUrl, "ol", "${fragmentId}")>
+				<#assign nextPageUrl2 = util.addParam(nextPageUrl1,"purl","${purl_param}")>
+				<#assign nextPageUrl3 = util.addParam(nextPageUrl2, "page", "${nextPage}")>
+				<#if nextPageUrl3?index_of('vt=3')!= -1>
+					<#assign bookNextPage4 = nextPageUrl3?replace('vt=3','vt=9')>
+				<#else>
+					<#assign bookNextPage4 = util.addParam(nextPageUrl3, "vt", "9")>
+				</#if>
+				<#assign nextPageData = "{'nextUrl':'${bookNextPage4}','currPage':'${currPage}','nextPage':'${nextPage}','fragmentId':'${fragmentId}'}">
+				<#if nextPageUrl!="" && nextPageUrl!="null" && (!nextPageUrl?contains('#')&&!nextPageUrl?contains('null'))>
+					<div class="spin">
+						<input id="downlazyLoad" type="hidden" value="${nextPageData}"/>
+					</div>
+				</#if>
+				<#-- 加载更多 end -->
+				</section>
+				<div class="showOver">已显示全部</div>
+			<#else>
+				<div class="null_box">
+				<div class="cmr-font-bigger">
+
+				您还未开通包月，可进入会员中心获取更多信息。
+
+
+				</div>
+				</div>
+			</#if>
+		<#else>
+			<div class="null_box">
+				<div class="cmr-font-bigger">
+
+				您还未开通包月，可进入会员中心获取更多信息。
+
+				</div>
+				</div>
+		</#if>
+	<#else>
+		<div class="null_box">
+				<div class="cmr-font-bigger">
+
+				您还未开通包月，可进入会员中心获取更多信息。
+
+				</div>
+				</div>
+	</#if>
+</#if>
+
+<#macro showd_link1(d_link1)>
+	<#if d_link1??>
+		<#assign d_desc1=d_link1.getDesc()!"null">
+		<#assign d_url1=d_link1.getUrl()!"null">
+		<#assign dataSrcId=(d_link1.getDataSrcConf().getDataId())! ""><#--数据源id-->
+		<#assign d_bjurl=util.addLinkNo('${d_url1}','${dataSrcId}','L1')! ""><#--话单统计后的url-->
+		<#if d_bjurl!="null" && d_bjurl!="" && !d_bjurl?contains("/#") && !d_bjurl?contains("#?")>
+			<a href="${d_bjurl}"  class="blue2">
+		<#else>
+			<a class="blue2">
+		</#if>
+		${d_desc1}
+		</a>
+	</#if>
+</#macro>

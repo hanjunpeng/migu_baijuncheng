@@ -1,0 +1,241 @@
+<#--BR003701 hanjunpeng 推荐文本_V7 start-->
+<#--数据源：
+			addPost:发帖数据源；
+			d_pltxt:文本数据源；
+			d_BookScore:打分数据源；
+			d_Link1:链接数据源(评论地址)；
+			d_Link2:链接数据源(打赏地址)；
+			d_book: 内容数据源；
+-->
+<#--碎片变量：
+		f_wytjContent 【我要推荐文本展示】（输入框，非必填，默认“我要推荐”）；
+		f_yudingDesc 【未预定文案】 （输入框，非必填，默认“预定更新”）；
+		f_yydContent 【已预定文案】 （输入框，非必填，默认“已经预定”）；
+		f_isShowBottom 【是否展示下边距】 单选 1:是;2:否;默认2；
+-->
+<!--fmName:推荐文本_V7-->
+<#compress>
+<#assign ln_num=0>
+<#assign bid=request.getParameter("bid")!"null">
+<#assign FragmentId = request.getFragmentId()!"null">
+<#assign d_currentPage = util.getCurrentPage("purl")!"null">
+<#assign d_currentPage = util.processForView(d_currentPage)!"null"><#--获取数据源信息-->
+<#assign d_currentPage = util.addLinkNo('${d_currentPage}','${FragmentId}','L2')!"null"> 
+<#assign ln_num = ln_num+1>
+<#if f_value??>
+	<#assign d_wytjContent = f_value.getValue("f_wytjContent")!"null"><#--获取“我要推荐”-->
+	<#assign d_yudingDesc = f_value.getValue("f_yudingDesc")!"有新内容提醒我"><#--获取未预定更新提示语-->
+	<#assign d_yydContent = f_value.getValue("f_yydContent")!"null"><#--获取已经预定提示语-->
+	<#assign isShowBottom = f_value.getValue("f_isShowBottom")! ""><#--获取展示下边距-->
+</#if>
+<#if isShowBottom =="">
+	<#assign isShowBottom = "2"><#--默认否-->
+</#if>
+<!--isShowBottom=${isShowBottom}-->
+<#assign d_bookstaut = d_book.getStatus()!"0"><#--判断图书是否是连载:1为完本,0为连载。-->
+<#assign d_bookId = d_book.getId()!"null"><#--获取图书id-->
+<#assign d_bookCoverLogo = d_book.getCoverLogo("2","1")!"null"><#--获取图书图片-->
+<#assign d_bookShowName = d_book.getShowName()!"null"><#--获取图书名称-->
+<#assign d_bookShowName = d_bookShowName?replace("&apos;","'")>
+<!-- bid : ${d_book.getId()} -->
+<!--d_bookstaut=${d_bookstaut}-->
+<#assign d_userReserveBook = user.isReserveBook("${d_book.getId()}")><#--判断图书是否已预定-->
+<!--d_userReserveBook=${d_userReserveBook}-->
+<#if d_book?? && d_book.getBookLink()??>
+	<#assign d_bookName = d_book.getName()!"null">
+	<#assign d_bookLink = d_book.getBookLink()>
+	<#assign d_yudingUrl = d_bookLink.getReserveUrl()!"null"><#--图书预订地址-->
+	<!--d_yudingUrl=${d_yudingUrl}-->
+	<#else>
+	<#assign d_yudingUrl = "">
+	<#assign d_bookName = "">
+</#if>
+<#if d_Link1??><#--评论地址-->
+	<#assign d_UrlgoPL = d_Link1.getUrl()!"null">
+	<#assign d_UrlgoPL = util.processForView(d_UrlgoPL)!"null">
+	<#assign dataSrcConf=(d_Link1.getDataSrcConf().getDataId())!"null">
+	<#assign d_UrlgoPL= util.addLinkNo("${d_UrlgoPL}","${dataSrcConf}","L${ln_num}")!"">
+	<#assign ln_num = ln_num +1>
+	<#if d_UrlgoPL==""||d_UrlgoPL=="null"||d_UrlgoPL?contains("#")||d_UrlgoPL?contains("javascript:void(0);")>
+		<#assign d_UrlgoPL = "javascript:void(0);">
+	</#if>
+</#if>
+<#if d_Link2??><#--打赏地址-->
+	<#assign d_UrlgoDS = d_Link2.getUrl()!"null">
+	<#assign d_UrlgoDS = util.processForView(d_UrlgoDS)!"null">
+	<#assign dataSrcConf=(d_Link2.getDataSrcConf().getDataId())!"null">
+	<#assign d_UrlgoDS= util.addLinkNo("${d_UrlgoDS}","${dataSrcConf}","L${ln_num}")!"">
+	<#assign ln_num = ln_num +1>
+	<#if d_UrlgoDS==""||d_UrlgoDS=="null"||d_UrlgoDS?contains("#")||d_UrlgoDS?contains("javascript:void(0);")>
+		<#assign d_UrlgoDS = "javascript:void(0);">
+	</#if>
+</#if>
+<#assign d_userLoginType = user.getLoginType()!"0">
+<div class="tbox" style="margin-bottom:0;">
+	<#if d_bookstaut=="1"><#--完本阅读末页-->
+		<#assign pf_score=d_book.getMyScore()!""><#--判断是否有过打分-->
+		<!--pf_score=${pf_score}-->
+		<div class="last_recommen">
+			<h2 class="cmr-yuedu-moye">
+				<#if (pf_score!="" && pf_score!="null" && pf_score!="0")>
+					我的评分
+				<#else>
+					不知不觉已经看完了！不如打个分吧~
+				</#if>
+			</h2>
+		<#if d_BookScore??><#--打分数据源-->
+			<#assign scoreurl = d_BookScore.givenScoreUrl()!"null"><#--获取打分地址-->
+			<form action="${scoreurl}" method="post" id="form1">
+				<div class="star_box" id="star_b">
+					<input type="hidden" value="${pf_score}" id="pf_score"/>
+					<img src="/rbc/t/content/repository/ues/image/s109/<#if pf_score=='1' || pf_score=='2' || pf_score=='3' || pf_score=='4' || pf_score=='5'>star_f.png<#else>starhui_f.png</#if>" alt="" title="谢谢"/>
+					<img src="/rbc/t/content/repository/ues/image/s109/<#if  pf_score=='2' || pf_score=='3' || pf_score=='4' || pf_score=='5'>star_f.png<#else>starhui_f.png</#if>" alt="" title="谢谢"/>
+					<img src="/rbc/t/content/repository/ues/image/s109/<#if pf_score=='3' || pf_score=='4' || pf_score=='5'>star_f.png<#else>starhui_f.png</#if>" alt="" title="消磨消磨时间"/>
+					<img src="/rbc/t/content/repository/ues/image/s109/<#if pf_score=='4' || pf_score=='5'>star_f.png<#else>starhui_f.png</#if>" alt="" title="值得一读"/>
+					<img src="/rbc/t/content/repository/ues/image/s109/<#if pf_score=='5'>star_f.png<#else>starhui_f.png</#if>" alt="" title="强烈推荐"/>
+				</div>
+				<input id="score" name="givenScore" value="" type="hidden">
+			</form>
+		</#if>
+		<p id="star_text">
+			<#if (pf_score!="" && pf_score!="null" && pf_score!="0")>
+		轻触星星再次评论<#else>轻触星星打分</#if>
+		</p>
+		<input type="hidden" value="${pf_score}" id="pl_yf"/>
+		<div class="pl_txt">
+			<#assign loginType= user.getLoginType()!"0"><#--判断是否登录1未登录2登录-->
+			<#if loginType=="1"><#--未登录-->
+				<textarea class="pl_box cmr-font-bigger" id="content" maxlength="500" style="background:#fcfcfc;"></textarea>
+				<input class="pl_submit_url" value="发布" type="button" data-flag="false" onclick="cmrsdk.authenticate('${d_currentPage}');">
+			<#elseif loginType=="2"><#--已登录-->
+				<#if addPost??>
+					<#assign d_wpl = addPost.getUrl()!"null">
+					<#assign d_addParamWpl = util.addParam(d_wpl,"ftl_pltype",ftl_pltype)>
+				<#else>
+					<#assign d_addParamWpl = "">
+				</#if>
+				<form action="${d_addParamWpl}&bid=${bid}" id="fenxiangForm" name="fenxiangForm" method="post">
+				<#if pf_score!="" && pf_score!="null" && pf_score!="0">
+					<textarea class="pl_box cmr-font-bigger" id="content" name="contentMsg" maxlength="500" style="display:none;background:#fcfcfc;">
+				<#else>
+					<textarea class="pl_box cmr-font-bigger" id="content" name="contentMsg" maxlength="500" style="background:#fcfcfc;">
+				</#if>
+					</textarea>
+				<#if pf_score!="" && pf_score!="null" && pf_score!="0">
+					<input class="pl_submit_url" id="submitPL" value="发布" type="button" data-flag="false" style="display:none;">
+				<#else>
+					<input class="pl_submit_url" id="submitPL" value="发布" type="button" data-flag="false">
+				</#if>
+				</form>
+			</#if>
+			<#if pf_score!="" && pf_score!="null" && pf_score!="0">
+				<div class="plmr_txt cmr-font-bigger" style="display:none;">
+			<#else>
+				<div class="plmr_txt cmr-font-bigger">
+			</#if>
+				<#assign d_pltxtContent=d_pltxt.getRichContent()! "">
+				${d_pltxtContent}
+			</div>
+		</div>
+		</div>
+		<#assign bid=request.getParameter("bid")!"null">
+		<ul class="cheer_choice">
+			<li>
+				 <#if !d_UrlgoPL?contains("#") && d_UrlgoPL!="null">
+					<a href="${d_UrlgoPL}&bid=${bid}"><#else><a></#if>
+				   <img src="/rbc/t/content/repository/ues/image/s109/ireadhui1.png"/>
+				  <p>评论</p>
+				 </a>
+			</li>
+			<li>
+				<#if !d_UrlgoDS?contains("#") && d_UrlgoDS!="null">
+					<a href="${d_UrlgoDS}&bid=${bid}">
+					<#else><a></#if>
+					<img src="/rbc/t/content/repository/ues/image/s109/ireadhui3.png"/>
+					<p>打赏</p>
+				</a>
+			</li>
+			<li>
+				<a href="${d_book.getBookLink().gendMonthlyTicketUrl()}&amp;bid=${bid}">
+				   <img src="/rbc/p/content/repository/ues/image/s109/ireadhui2.png"/>
+				   <p>月票</p>
+				</a>
+			</li>
+			<li>
+				<a href="javascript:;" onclick="shareHD()">
+				   <img src="/rbc/t/content/repository/ues/image/s109/ireadhui4.png"/>
+					<p><#if d_wytjContent!="null" && d_wytjContent!="">${d_wytjContent}<#else>分享</#if></p>
+				</a>
+			</li>
+		</ul>
+	<#elseif d_bookstaut=="0"><#--阅读末页是连载状态-->
+	
+		<div class="last_recommen lianzai">
+           <img src="/rbc/t/content/repository/ues/image/s109/recommen.png">
+           <p class="booklzword">未完待续...</p>
+        </div>
+		<div class="cheer_text">↓ 来给作者加个油呗 ↓</div>
+		<ul class="cheer_choice">
+			<li>
+				 <#if !d_UrlgoPL?contains("#")>
+					<a href="${d_UrlgoPL}&bid=${bid}"><#else><a></#if>
+				    <img src="/rbc/t/content/repository/ues/image/s109/weiiread1.png"/>
+				   <p>评论</p>
+				 </a>
+			</li>
+			<li>
+				<#if !d_UrlgoDS?contains("#") && d_UrlgoDS!="null">
+					<a href="${d_UrlgoDS}&bid=${bid}">
+					<#else><a></#if>
+					<img src="/rbc/t/content/repository/ues/image/s109/weiiread3.png"/>
+					<p>打赏</p>
+				</a>
+			</li>
+			<li>
+				<a href="${d_book.getBookLink().gendMonthlyTicketUrl()}&bid=${bid}">
+					   <img src="/rbc/p/content/repository/ues/image/s109/weiiread2.png"/>
+				   <p>月票</p>
+				</a>
+			</li>
+		    <li>
+				<a href="javascript:;" onclick="shareHD()">
+					<img src="/rbc/t/content/repository/ues/image/s109/weiiread4.png"/>
+					<p><#if d_wytjContent!="null" && d_wytjContent!="">${d_wytjContent}<#else>分享</#if></p>
+				</a>
+		    </li>
+		</ul>
+		<#if d_yudingUrl=="null" || d_yudingUrl==""><#--地址不存在-->
+			<p class="yuupdate">${d_yydContent}</p>
+		<#else>
+			<#if d_userLoginType == '1'><#--未登录-->
+				<a href="javascript:;" ontouchend="cmrsdk.authenticate('${d_currentPage}')"  class="yuupdate">
+			<#else><#--已登录-->
+				<#if d_userReserveBook=="0"><#--用户未预定-->
+					<p data-url="${d_yudingUrl}" class="yuupdate">${d_yudingDesc}</p><#--从未预定文案中获取-->
+				<#else>
+					<p data-url="${d_yudingUrl}" class="yuupdate">${d_yydContent}</p><#--从已预定文案中获取-->
+				</#if>
+			</#if>
+   		</#if>
+	</#if>	
+</div>
+<#if isShowBottom == "1">
+	<div style="width:100%;height:0.67rem;background:#f0f0f0;"></div>
+</#if>
+</#compress>
+<#--hanjunpeng 活动分享浮层 start-->
+<#if d_linkShareHD??>
+	<#assign SharelinkPrefix = d_linkShareHD.getPrefix()! ""><#--获取链接前缀-->
+	<#assign SharelinkPrefix = d_bookShowName>
+</#if>
+<#assign SharelinkDesc = d_linkShareHD.getDesc()! ""><#--获取链接描述-->
+<input type="hidden" id="s_contentId" value='${d_bookId}'>
+<input type="hidden" id="s_title" value='${SharelinkPrefix}'>
+<input type="hidden" id="s_desc" value='${SharelinkDesc}'>
+<input type="hidden" id="s_img" value='${d_bookCoverLogo}'>
+<script type="text/javascript">
+$(function(){
+    $(".pl_box").val($.trim($(".pl_box").val()));
+    console.log($(".pl_box").length);
+})
+</script>

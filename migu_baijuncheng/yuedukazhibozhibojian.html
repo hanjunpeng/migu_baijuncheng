@@ -1,0 +1,59 @@
+<style>
+        .zhiBao{padding-bottom:12px;background:#5b5c5c;}
+	.swiperTouchBox{width:100%;}
+       .swiph{position:relative;}
+	.swiph .dantu{display:block;width:100%;height:99px;}
+	.swiph .dantu img{display:block;width:100%;height:99px;}
+        .swiph .datazhibo{width:57px;height:27px;line-height:12px;padding-top:2px;padding-left:2px;background:rgba(49,182,168,1);position:absolute;right:0;bottom:0;color:#fff;box-sizing:border-box;font-size:9px;}
+	.swiper-zhibo{width:100%;position:relative;}
+	.swiper-zhibo a{display:block;width:100%;height:99px;}
+	.swiper-zhibo a img{display:block;width:100%;height:99px;}
+	.swiper-zhibo .datazhibo{
+width:57px;height:27px;line-height:12px;padding-top:2px;padding-left:2px;background:rgba(49,182,168,1);position:absolute;right:0;bottom:0;color:#fff;box-sizing:border-box;font-size:9px;}
+</style>
+<!--碎片：悦读咖_直播间-->
+<#--BR002820 hanjunpeng star-->
+<#--碎片变量：title_text:标题文本;time_action:活动时间;-->
+<#--链接数据源：d_linkList-->
+<#if f_value??>
+	<#assign title_text = f_value.getValue("title_text")!"">
+	<#assign time_action = f_value.getValue("time_action")!"">
+</#if>
+<div class="zhiBao">
+<#if title_text!="" && title_text !="null">
+	<div class="ydh-title"><span>${title_text}</span></div>
+</#if>
+	<#if d_linkList??>
+		<#assign linkList=d_linkList.getLinkList()!""><#--获取链接列表-->
+		<#assign size=linkList?size>
+		<#if size &lt;= 1>
+			<#assign dataUrl=linkList[0].getPicUrl()!"">
+			<#assign dataShu=linkList[0].getUrl()!"">
+			<div class="swiph">
+				<a <#if dataShu !="null" && dataShu !=""&&(!dataShu?contains("/#")&&!dataShu?contains("#?"))>href="${dataShu}"<#else></#if> class="dantu">
+					<img src="${dataUrl}">
+				</a>
+				<div class="datazhibo">${time_action}</div>
+			</div>
+		<#else>
+			<div class="swiperTouchBox" id="swiperZo">
+				<div class="swiper-container">
+					<div class="swiper-wrapper">
+						<#list linkList as dataList>
+						<#assign dataUrl=dataList.getPicUrl()!""><#--获取链接列表-->
+						<#assign dataShu=dataList.getUrl()!""><#--获取链接列表-->
+						<div class="swiper-slide">
+							<div class="swiper-zhibo">
+								<a <#if dataShu !="null" && dataShu !=""&&(!dataShu?contains("/#")&&!dataShu?contains("#?"))>href="${dataShu}"<#else></#if> class="wuzhi">
+									<img src="${dataUrl}">
+								</a>
+								<div class="datazhibo">${time_action}</div>
+							</div>
+						</div>
+						</#list>
+					</div>
+				</div>
+			</div>
+		</#if>
+	</#if>
+</div>

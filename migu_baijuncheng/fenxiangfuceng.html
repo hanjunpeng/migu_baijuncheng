@@ -1,0 +1,502 @@
+<#--
+	BR003231、王吉、20170503、新增碎片
+	碎片变量:
+		分享方式选择(复选框):shareChange;默认:全选;
+			枚举值:1:和飞信;2:微信好友;3:朋友圈;4:微博;5:二维码;6:QQ;7:QQ空间;8:其他;
+		是否展示入口浮层(单选框):isShowPop;默认:2;枚举值:1:是;2:否;
+		分享内容类型(单选框):shareContentType;默认:5;
+			枚举值:1:书籍业务;2:书单;3:F码;4:V码;5:其它;6:红包;7:图片;8:阅读时长;9:每日一推;10:特殊;
+            分享成功加入用户组  shareAddGroup 单选 默认：2；1：是2：否；（BR004217 shushan）
+	数据源:
+		文本数据源(分享成功跳转地址):d_shareSuccess_text;
+			数据源变量:
+				分享成功是否跳转页面(单选框):shareSuccessLink;默认:2;枚举值:1:是;2:否;
+				跳转周期设置(单选框):linkCycle;默认:1;枚举值:1:总共一次;2:一天一次;3:不限次数;
+		链接数据源(分享信息配置):d_share_link;
+		分享地址(文本数据源):d_share_content;
+        文本数据源（加入用户组数据页） d_ShareMidUrl （BR004217 shushan）
+-->
+<!--fmName:分享浮层_V7-->
+<#--分享浮层碎片场景较多,js和样式跟着碎片走-->
+
+<style type="text/css">
+/*分享浮层、头*/
+/*flex和box兼容写法*/
+.cmr-grey-pop {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  z-index: 11;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.cmr-share-pop {
+  padding: 0.77rem 0.8rem 1.03rem;
+  background-color: #fff;
+  overflow: hidden;
+  position: fixed;
+  bottom: 0;
+  z-index: 12;
+  display: none;
+  width: 93.6%;
+  z-index: 999;
+}
+
+.cmr-share-pop .cmr-share-icon {
+  width: 25%;
+  float: left;
+  text-align: center;
+  overflow: hidden;
+  padding-top: 0.77rem;
+}
+
+.cmr-share-pop .cmr-share-icon .cmr-icon-img {
+  width: 3.87rem;
+  height: 3.87rem;
+}
+
+.cmr-share-pop .cmr-share-icon .cmr-text {
+  font-size: 0.87rem;
+  color: #323232;
+  line-height: 100%;
+  margin: 0.6rem 0;
+}
+
+.cmr-share-btn {
+  position: fixed;
+  z-index: 10;
+  overflow: hidden;
+	width:4.27rem;
+	height:2.4rem;
+	right:-2px;
+	top:8.2rem;
+}
+
+.cmr-share-btn .cmr-share-show {
+  display: block;
+  background: url(/rbc/p/content/repository/ues/image/s109/7_shareImg.png) no-repeat;
+  background-size: 100% auto;
+  height: 100%;
+  width: 100%;
+}
+
+/*分享浮层、尾*/
+</style>
+<#assign ua = (request.getHeader("user-agent")?upper_case)!"">
+<#--判断当前版本是否支持shareContentEx()方法1支持0不支持-->
+<#assign shareContentEx = "0">
+<#--是否支持QQ分享1支持0不支持-->
+<#assign shareQQ = "0">
+<#if ua?contains("ANDROID")>
+	<#assign shareContentEx = util.isSupportAbility("and_shareContentEx")!"0">
+	<#assign shareQQ = util.isSupportAbility("and_shareQQ")!"0">
+<#elseif ua?contains("IOS") || ua?contains("IPHONE")>
+	<#assign shareContentEx = util.isSupportAbility("ios_shareContentEx")!"0">
+	<#assign shareQQ = util.isSupportAbility("ios_shareQQ")!"0">
+</#if>
+
+<#assign iszhichiMore = util.isSupportAbility("and_moreFetion")!"0"><#--1支持,0不支持-->
+<#assign iszhichiHFX = util.isSupportAbility("and_newfetionShare")!"0"><#--1支持,0不支持-->
+
+<#assign shareChange = ""><#--分享方式选择-->
+<#assign isShowPop = "2"><#--是否展示入口浮层-->
+<#--分享内容类型,1:书籍业务;2:书单;3:F码;4:V码;5:其它;6:红包;7:图片;8:阅读时长;9:每日一推;10:特殊;-->
+<#assign shareContentType = "5">
+<#--3245 lyf 增加scene whichScene -->
+<#assign scene = "">
+
+<#if f_value??>
+	<#assign shareChange = f_value.getValue("shareChange")!""><#--分享方式选择-->
+	<#assign isShowPop = f_value.getValue("isShowPop")!"2"><#--是否展示入口浮层-->
+	<#--分享内容类型,1:书籍业务;2:书单;3:F码;4:V码;5:其它;6:红包;7:图片;8:阅读时长;9:每日一推;10:特殊;-->
+	<#assign shareContentType = f_value.getValue("shareContentType")!"5">
+	<#assign whichScene = f_value.getValue("scene")!"0"><#--使用场景0:普通页;1:偷书;2:赠书;-->
+</#if>
+<#if whichScene??>
+	<#if whichScene =="1">
+		<#assign scene = "1">
+	<#elseif whichScene =="2">
+		<#assign scene = "2">
+	<#else>
+		<#assign scene = "">
+	</#if>
+</#if>
+<#--3245 lyf end-->
+
+<#--分享选择方式默认全选,如有一个不选,碎片不展示-->
+<#assign ln_num = 1>
+<#--分享成功后的跳转以及跳转次数-->
+<#assign successLink = "">
+<#assign shareSuccessLink = "2">
+<#assign linkCycle = "1"><#--1:总共一次;2:一天一次;3:不限次数;-->
+<#assign successObj = "">
+<#if d_shareSuccess_text??>
+	<#assign successLink = d_shareSuccess_text.getContent()!"">
+	<#assign shareSuccessLink = d_shareSuccess_text.getDefineValue("shareSuccessLink")!"2">
+	<#assign linkCycle = d_shareSuccess_text.getDefineValue("linkCycle")!"1"><#--1:总共一次;2:一天一次;3:不限次数;-->
+	<#assign successObj = "{'successLink':'${successLink}','linkCycle':${linkCycle}}">
+</#if>
+<#if shareSuccessLink!="2">
+	<div style="display:none;" id="shareSuccessObj" data-obj="${successObj}"></div>
+</#if>
+<#assign mbid = user.getId()! ""><#--点击分享者的mbid-->
+<#if shareChange != "">
+	<!-- 分享浮层、头 -->
+	<#assign shareTitle = "">
+	<#assign shareDesc = "">
+	<#assign shareImgUrl = "">
+	<#assign shareUrl = "">
+	<#--分享内容类型,1:书籍业务;2:书单;3:F码;4:V码;5:其它;6:红包;7:图片;8:阅读时长;9:每日一推;10:特殊;-->
+	<#if shareContentType == "5" || shareContentType == "6"><#--其他或者红包-->
+		<#if d_share_link??>
+			<#assign shareTitle = d_share_link.getPrefix()!"">
+			<#assign shareDesc = d_share_link.getDesc()!"">
+			<#assign shareImgUrl = d_share_link.getPicUrl()!"">
+			<#if shareImgUrl?index_of('://')==-1>
+				<#assign shareImgUrl = 'http://wap.cmread.com'+shareImgUrl>
+			</#if>
+			<#-- <#assign shareUrl = d_share_link.getUrl()!"">
+			<#if shareUrl !="" && shareUrl!="null" && !shareUrl?contains('#')>
+				<#if shareUrl?index_of('http://') == -1>
+					<#assign shareUrl = 'http://wap.cmread.com'+shareUrl>
+				</#if>
+				<#assign ln_num = ln_num + 1>
+			</#if> -->
+		</#if>
+		<#if d_share_content??>
+			<#assign shareUrl = d_share_content.getContent()!"">
+			<#if shareUrl !="" && shareUrl!="null" && !shareUrl?contains('#')>
+				<#if shareUrl?index_of('http://') == -1>
+					<#assign shareUrl = 'http://wap.cmread.com'+shareUrl>
+				</#if>
+				<#assign ln_num = ln_num + 1>
+			</#if>
+		</#if>
+	</#if>
+	<#assign FragmentId = request.getFragmentId()!"null"><#--返回当前碎片的id-->
+	<#assign rbc_tj_url = "//wap.cmread.com/rbc/p/statpage.jsp"><#--rbc的统计页-->
+	<#assign link_ln_url = util.processForView(rbc_tj_url)!"null"><#--获取数据源信息-->
+	<#assign ln_url = util.addLinkNo('${link_ln_url}','${FragmentId}','L${ln_num}')!"null">
+	<#assign ln_num = ln_num + 1>
+	<#assign supportAbilityReffle = util.isSupportAbility("and_newpictureShare")! ""><#--如果是1参数15-->
+	<#if shareContentType == "1"><#--书籍-->
+		<#assign shareContentType = "1">
+	<#elseif shareContentType == "2"><#--书单-->
+		<#assign shareContentType = "6">
+	<#elseif shareContentType == "3"><#--F码-->
+		<#assign shareContentType = "8">
+	<#elseif shareContentType == "4"><#--V码-->
+		<#assign shareContentType = "9">
+	<#elseif shareContentType == "5"><#--其他-->
+		<#assign shareContentType = "10">
+	<#elseif shareContentType == "6"><#--红包-->
+		<#assign shareContentType = "12">
+	<#elseif shareContentType == "7" || shareContentType == "9"><#--图片-->
+		<#if supportAbilityReffle == "1" && ua?contains("ANDROID")>
+			<#assign shareContentType = "15">
+		<#else>
+			<#assign shareContentType = "13">
+		</#if>
+	<#elseif shareContentType == "8"><#--阅读时长-->
+		<#assign shareContentType = "14">
+	<#elseif shareContentType == "10"><#--特殊-->
+		<#assign shareContentType = "88"><#--与其他类型一样传10,但为了区别类型故设置为88-->
+	</#if>
+	<#if ua?contains("ANDROID")>
+		<section class="cmr-grey-pop"></section>
+	</#if>
+	<#if isShowPop == "1">
+		<section class="cmr-share-btn">
+			<a onclick="shareHD()" class="cmr-share-show"></a>
+		</section>
+	</#if>
+	<#--BR003701、王吉、20170629、优化替换分享icon-->
+	<#if ua?contains("ANDROID")>
+		<section class="cmr-share-pop" data-sharecontenttype="${shareContentType}">
+			<#assign client_json = "">
+			<#assign client_fn_name = "">
+			<#if shareContentEx == "1"><#--支持shareContentEx分享-->
+				<#assign client_fn_name = "cmrsdk.shareEx">
+				<#if shareChange?contains("4")><#--微博-->
+					<#if ua?contains("ANDROID")>
+						<#assign shareContentType_weibo = shareContentType>
+						<#if shareContentType == "12">
+							<#assign shareContentType_weibo = "10">
+						</#if>
+						<#assign client_json = "{shareType:'3',contentType:'${shareContentType_weibo}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("微博","/rbc/p/content/repository/ues/image/s109/pic_share_sina_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("2")><#--微信-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'4',detailType:'1',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("微信","/rbc/p/content/repository/ues/image/s109/pic_share_wx_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("3")><#--朋友圈-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'4',detailType:'2',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("朋友圈","/rbc/p/content/repository/ues/image/s109/pic_share_wx_crowd_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("1") && iszhichiHFX == "1" ><#--和飞信-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'8',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("和飞信","/rbc/p/content/repository/ues/image/s109/pic_share_feixin_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("5")><#--二维码-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'2',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("二维码","/rbc/p/content/repository/ues/image/s109/share_qr_codes.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("6") && shareQQ == "1"><#--QQ-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'5',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("QQ","/rbc/p/content/repository/ues/image/s109/pic_share_qq_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("7")><#--QQ空间-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'6',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("QQ空间","/rbc/p/content/repository/ues/image/s109/pic_share_qzone_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("8") && iszhichiMore == "1"><#--更多-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'7',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',extend:''}">
+						<#call getShareHtml("更多","/rbc/p/content/repository/ues/image/s109/share_more.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+			<#else><#--不支持shareContentEx分享-->
+				<#assign client_fn_name = "cmrsdk.share">
+				<#if shareChange?contains("2")><#--微信-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'4',detailType:'1',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}'}">
+						<#call getShareHtml("微信","/rbc/p/content/repository/ues/image/s109/pic_share_wx_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+				<#if shareChange?contains("3")><#--朋友圈-->
+					<#if ua?contains("ANDROID")>
+						<#assign client_json = "{shareType:'4',detailType:'2',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}'}">
+						<#call getShareHtml("朋友圈","/rbc/p/content/repository/ues/image/s109/pic_share_wx_crowd_icon.png",client_json,client_fn_name)>
+					</#if>
+				</#if>
+			</#if>
+		</section>
+	<#elseif ua?contains("IOS") || ua?contains("IPHONE")>
+		<#--枚举值:1:书籍业务;2:书单;3:F码;4:V码;5:其它;6:红包;7:图片;8:阅读时长;9:每日一推;10:特殊;-->
+		<#assign client_json = "{detailType:'1',contentType:'${shareContentType}',title:'${shareTitle}',description:'${shareDesc}',bigLogo:'${shareImgUrl}',URL:'${shareUrl}',scene:'${scene}',imgUrl:'${shareImgUrl}',successAction:'${user.getToken()!}'}">
+		
+		<#if shareContentEx == "1" && shareContentType !="10" && shareContentType!="8" && shareContentType!="9" && shareContentType!="14"><#--支持shareContentEx分享,ios其他10的类型不能使用该方法-->
+			<#assign client_fn_name = "cmrsdk.shareEx">
+			<#call getIosShareHtml(client_json,client_fn_name,shareContentType)>
+		<#else>
+			<#assign client_fn_name = "cmrsdk.share">
+			<#call getIosShareHtml(client_json,client_fn_name,shareContentType)>
+		</#if>
+	</#if>
+<#--BR004217、shushan、20170905，分享成功加入用户组-->
+    <#assign shareA = f_value.getValue('shareAddGroup')!"2">
+    <#if shareA == "1">
+        <#assign shareMidUrl= d_ShareMidUrl.getContent()!"null">
+        <#if shareMidUrl != "" && shareMidUrl != "null">
+            <input type="hidden" value="${shareMidUrl}" id="shareMidUrl"/>
+        </#if>
+    </#if>
+	<!-- 分享浮层、尾 -->
+</#if>
+
+<#macro getShareHtml(title,imgUrl,clientShareJson,clientfnname)>
+	<div data-clientjson="${clientShareJson}" data-clientfnname="${clientfnname}" data-uatype="<#if ua?contains('ANDROID')>android</#if>" class="cmr-share-icon">
+		<img  class="cmr-icon-img" src="${imgUrl}"/>
+		<p class="cmr-text">${title}</p>
+	</div>
+</#macro>
+
+<#macro getIosShareHtml(clientShareJson,clientfnname,contentType)>
+	<div style="display:none;" data-clientjson="${clientShareJson}" data-contenttype="${contentType}" data-clientfnname="${clientfnname}" data-uatype="<#if ua?contains('IOS') || ua?contains('IPHONE')>ios</#if>" id="cmr-ios-icon">
+	</div>
+</#macro>
+
+<script type="text/javascript">
+	/*根据当前选择场景来遍历添加客户端方法跟传参json*/
+	$(function(){
+
+		/*点击灰色蒙层关闭分享浮层*/
+		if($('.cmr-grey-pop').length > 0){
+			$('.cmr-grey-pop').on('touchend',function(oEvent){
+				e = window.event || oEvent;if(e.stopPropagation){e.stopPropagation();}else{e.cancelBubble = true;}e.preventDefault();
+				$(this).hide();
+				$(".cmr-share-pop").hide();
+			});
+		}
+	});
+
+	function initShareBtn(){
+		if($('.cmr-share-pop').length > 0){
+			$('.cmr-share-pop').each(function(index,item){
+				var sharecontenttype = $(this).data("sharecontenttype");
+				if(sharecontenttype){
+					eachShareBtn(sharecontenttype);
+				}
+			});
+		}
+	}
+
+	function hideSharePop(){
+		$(".cmr-grey-pop").hide();
+		$(".cmr-share-pop").hide();
+	}
+	/*遍历分享按钮添加客户端方法以及各个类型下的json串*/
+	function eachShareBtn(contentType){		
+		$.each($('.cmr-share-icon'),function(index,item){
+			var $this = $(this),
+				clientjson = eval('('+$this.data('clientjson')+')')||null,
+				clientfnname = $this.data('clientfnname'),
+				s_presentId = $('#s_presentId').val()||'',
+				uatype = $this.data('uatype');
+			try{
+				/*
+					<#if shareContentType == "1"><#--书籍-->
+						<#assign shareContentType = "1">
+					<#elseif shareContentType == "2"><#--书单-->
+						<#assign shareContentType = "6">
+					<#elseif shareContentType == "3"><#--F码-->
+						<#assign shareContentType = "8">
+					<#elseif shareContentType == "4"><#--V码-->
+						<#assign shareContentType = "9">
+					<#elseif shareContentType == "5"><#--其他-->
+						<#assign shareContentType = "10">
+					<#elseif shareContentType == "6"><#--红包-->
+						<#assign shareContentType = "12">
+					<#elseif shareContentType == "7"><#--图片-->
+						<#assign shareContentType = "13">
+					<#elseif shareContentType == "8"><#--阅读时长-->
+						<#assign shareContentType = "14">
+					<#elseif shareContentType == "9"><#--每日一推-->
+						<#assign shareContentType = "15">
+					<#elseif shareContentType == "10"><#--特殊-->
+						<#assign shareContentType = "88">
+					</#if>
+				*/
+				if(clientjson && contentType != 10 && contentType != 12){
+					s_id = '',
+					s_url = '';
+					$('#s_title').val()?s_title = $('#s_title').val().replace(/(<br>|<br >)/g,"").replace(/<br\\/>/g,"").replace(/<br \\/>/g,"")||'':null;
+					$('#s_desc').val()?s_desc = $('#s_desc').val().replace(/(<br>|<br >)/g,"").replace(/<br\\/>/g,"").replace(/<br \\/>/g,"")||'':null;
+					s_img = $('#s_img').val()||'';
+					if(contentType==1){/*书籍*/
+						s_id = $('#s_contentId').val()||'',
+						s_url = $('#s_url').val()||'';
+					}else if(contentType == 6){/*书单*/
+						s_id = $('#s_std').val()||'';
+					}else if(contentType == 8 || contentType == 9){/*F码或V码*/
+						s_id = $('#s_code').val()||'';
+						s_url = $('#s_url').val()||'';
+					}else if(contentType == 13 || contentType == 14 || contentType == 15 || contentType == 88){/*图片,阅读时长,每日一推,特殊*/
+						s_url = $('#s_url').val()||'';
+					}
+					contentType==1?(clientjson.contentId = s_id,clientjson.bookType = "1",clientjson.URL = s_url,clientjson.imgUrl = 'src=${user.getToken()!}&mbid=${mbid}'):'';
+					contentType==6?(clientjson.std = s_id):'';
+					contentType==8||contentType==9?(clientjson.URL = (s_url.indexOf('?')!=-1?s_url+'&key='+s_id:s_url+'?key='+s_id),clientjson.code = s_id):'';
+					contentType==13||contentType==14||contentType==15?(clientjson.URL = s_url,clientjson.imgUrl = s_img):'';
+					contentType==88?(clientjson.URL = s_url,clientjson.imgUrl = s_img,clientjson.contentType = "10"):'';/*特殊和其他一样类型为10*/
+					contentType==1&&clientjson.detailType==2?clientjson.title = s_desc:clientjson.title = s_title;
+					clientjson.description = s_desc,
+					clientjson.bigLogo = s_img;
+					clientjson.extend = "p1="+s_presentId;
+					uatype=='android'?$this.attr('onclick',clientfnname+'('+JSON.stringify(clientjson)+');hideSharePop();'):'';
+				}else{
+					uatype=='android'?$this.attr('onclick',clientfnname+'('+JSON.stringify(clientjson)+');hideSharePop();'):'';
+				}
+				console.log(clientjson);
+			}catch(e){
+			}
+		});
+	}
+
+	/*分享浮层展示方法*/
+	function shareHD(){
+		readHDTJ('${ln_url}',function(){
+			$(".cmr-grey-pop").show();
+			$(".cmr-share-pop").show();
+			if('${ua}'.indexOf("IOS")!=-1 || '${ua}'.indexOf("IPHONE")!=-1){
+				iosShare();
+			}else{
+				initShareBtn();
+			}
+		});
+	}
+	/*IOS下cmr-ios-share绑定事件类名*/
+	function iosShare(){
+		if($('#cmr-ios-icon').length > 0){
+			try{
+				var $this = $('#cmr-ios-icon'),
+					contentType = $this.data("contenttype"),
+					uatype = $this.data('uatype');
+				var s_title="",s_desc="";
+				$('#s_title').val()?s_title = $('#s_title').val().replace(/(<br>|<br >)/g,"").replace(/<br\\/>/g,"").replace(/<br \\/>/g,"")||'':null;
+				$('#s_desc').val()?s_desc = $('#s_desc').val().replace(/(<br>|<br >)/g,"").replace(/<br\\/>/g,"").replace(/<br \\/>/g,"")||'':null;
+					var s_img = $('#s_img').val()||'',
+					s_presentId = $('#s_presentId').val()||'',
+					s_url = '',
+					clientjson = eval('('+$this.data('clientjson')+')')||null,
+					clientfnname = $this.data('clientfnname');
+				/*
+					<#if shareContentType == "1"><#--书籍-->
+						<#assign shareContentType = "1">
+					<#elseif shareContentType == "2"><#--书单-->
+						<#assign shareContentType = "6">
+					<#elseif shareContentType == "3"><#--F码-->
+						<#assign shareContentType = "8">
+					<#elseif shareContentType == "4"><#--V码-->
+						<#assign shareContentType = "9">
+					<#elseif shareContentType == "5"><#--其他-->
+						<#assign shareContentType = "10">
+					<#elseif shareContentType == "6"><#--红包-->
+						<#assign shareContentType = "12">
+					<#elseif shareContentType == "7"><#--图片-->
+						<#assign shareContentType = "13">
+					<#elseif shareContentType == "8"><#--阅读时长-->
+						<#assign shareContentType = "14">
+					<#elseif shareContentType == "9"><#--每日一推-->
+						<#assign shareContentType = "15">
+					<#elseif shareContentType == "10"><#--特殊-->
+						<#assign shareContentType = "88">
+					</#if>
+				*/
+				if(contentType==1){/*书籍*/
+					s_id = $('#s_contentId').val()||'',
+					s_url = $('#s_url').val()||'';
+				}else if(contentType == 6){/*书单*/
+					s_id = $('#s_std').val()||'';
+				}else if(contentType == 8 || contentType == 9){/*F码或V码*/
+					s_id = $('#s_code').val()||'';
+					s_url = $('#s_url').val()||'';
+				}else if(contentType == 13 || contentType == 14 || contentType == 15 || contentType == 88){/*图片,阅读时长,每日一推,特殊*/
+					s_url = $('#s_url').val()||'';
+				}
+				if(clientjson && contentType!=10&&contentType!=12){
+					contentType==1?(clientjson.bookType = "1",clientjson.contentType = (''+contentType),clientjson.contentId = (''+s_id),clientjson.URL = 'src=&mbid=${mbid}'):'';
+					contentType==6?(clientjson.std = s_id,clientjson.contentType = (''+contentType)):'';
+					contentType==8||contentType==9?(clientjson.URL = (s_url.indexOf('?')!=-1?s_url+'&key='+s_id:s_url+'?key='+s_id),clientjson.code = s_id,clientjson.imgUrl = s_img):'';
+					contentType==13?(clientjson.URL = s_url,clientjson.imgUrl = s_img):'';
+					contentType==14||contentType==15?(clientjson.URL = s_url):'';
+					contentType==88?(clientjson.URL = s_url,clientjson.imgUrl = s_img,clientjson.contentType = "10"):'';/*特殊和其他一样类型为10*/
+					clientjson.title = s_title,
+					clientjson.description = s_desc,
+					clientjson.bigLogo = s_img;
+				}
+				clientjson.extend = "p1="+s_presentId+"&amp;scene=2";
+				console.warn(clientjson);
+				uatype=='ios'?eval('('+clientfnname+'('+JSON.stringify(clientjson)+'))'):'';
+			}catch(e){
+				console.warn(e.name + ':' + e.message);
+			}
+		}
+	}
+</script>

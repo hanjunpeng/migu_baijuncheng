@@ -1,0 +1,251 @@
+<#--BR002720 hanjunpeng 20170420 个人书单_V7碎片 start-->
+<#--数据源:用户行为数据源:d_UserBehave
+		   链接数据源:d_link
+		   链接数据源:d_seeLink
+	变量名:展示场景:f_showScene;1:个人主页;2:更多列表页;默认1
+		   每页展示条数:f_showPageTiao
+		   他认为空提示文本:f_listKong
+		   本人为空提示文本:f_bookListKong
+-->
+<style>
+       
+	img{border:0;}
+	.cmr-le-left{border-bottom:	0.67rem solid #F0F0F0;margin:0;padding:0rem 1.1rem 1.73rem;}
+	.cmr-bookinfo .cmr-posi-si{top:0.45rem;margin-left:0.3rem;line-height:0.7rem;box-sizing:border-box;margin-top:0.34rem;display:inline-block;margin-top:0.29rem;}
+	.cmr-bkimg-middle{width:5.7rem;height:7.6rem;}
+	.cmr-bkcover-middle{width:5.7rem;height:7.6rem;}
+	.cmr-book .cmr-hh-fot{color:#9EA5AD;}
+	.cmr-book .cmr-bookinfo{padding:0;position:relative;height:7.1rem;}
+	.cmr-bookinfo .cmr-book-ell{max-width:12rem;margin-top:0.34rem;}
+	.cmr-le-lef-bot{margin:0rem 1.1rem;padding-top:1.06rem;padding-bottom:1.7rem;border-bottom:1px solid #F0F0F0;position:relative;}
+	.cmr-book .cmr-book-ell{height:2rem;line-height:2rem;}
+	.cmr-bookinfo .cmr-fins{position:absolute;bottom:-0.5rem;width:100%;height:1.3rem;}
+.shadow1 {
+  height: 0.6rem;
+}
+.shadow1 .shadow-short {
+  width: 75%;
+  height: 0.2rem;
+  background-color: #f4f4f4;
+  margin: 0 auto;
+}
+
+.shadow1 .shadow-middle {
+  width: 85%;
+  height: 0.2rem;
+  background-color: #e5e8ec;
+  margin: 0 auto;
+}
+
+.shadow1 .shadow-long {
+  width: 95%;
+  height: 0.2rem;
+  background-color: #c3ced9;
+  margin: 0 auto;
+}
+.cmr-person .cmr-shu-person{font-weight:normal;}
+
+</style>
+<!--fmName:个人书单_V7碎片-->
+<#assign ln_num = 1>
+<#assign userAgent = request.getHeader("User-Agent")!"null">
+<!--userAgent=${userAgent}-->
+<#assign d_mbid = request.getParameter("mbid")!"null"><#--用户id-->
+<#if f_value??>
+	<#assign f_showScene = f_value.getValue("f_showScene")! ""><#--获取展示场景-->
+	<#assign pageSize = f_value.getValue("f_showPageTiao")! ""><#--获取每页展示条数-->
+	<#assign pageSize = pageSize?number>
+	<!--pageSize==${pageSize}-->
+	<#assign f_listKong = f_value.getValue("f_listKong")! ""><#--获取他人为空提示语-->
+	<#assign f_bookListKong = f_value.getValue("f_bookListKong")!""><#--获取本人为空提示语-->
+</#if>
+<#if d_link??>
+	<#assign seeMore = d_link.getDesc()! ""><#-- 获取查看更多描述-->
+	<#assign seeMoreUrl = d_link.getUrl()! ""><#-- 获取查看更多链接-->
+	<#call HDfunc(d_link,seeMoreUrl,ln_num)><#--通过call传递实参-->
+	<#assign seeMoreUrl = url>
+</#if>
+<#if d_seeLink??>
+	<#assign seeLink = d_seeLink.getUrl()! ""><#-- 获取去看看链接 -->
+	<#call HDfunc(d_seeLink,seeLink,ln_num)>
+	<#assign seeLink = url>
+</#if>
+<#-- ---------上拉加载所需要的数据  开始--------- -->
+<#assign fragmentId = request.getFragmentId()!"null"><#-- 返回当前碎片的id -->
+<#assign d_pageNo = request.getParameter("page")!"1"><#-- 请求数据源，获取请求参数，获取页码 -->
+<#if d_pageNo=="" || d_pageNo=="null">
+  <#assign d_page = 1>  
+<#else>
+  <#assign d_page = d_pageNo?number><#--转换成number类型--> 
+</#if>
+<#assign currPage = d_page>
+<#assign nextPage = d_page + 1>
+<#assign purl_param = request.getParameter("purl")!"">
+<#-- ---------上拉加载所需要的数据  结束--------- -->
+
+<#if d_mbid!="null" && d_mbid!="">
+	<#assign d_userInfo = user.getUserInfo("${d_mbid}")!"null"><#--他人主页-->
+<#else>
+	<#assign d_userInfo = user.getUserInfo()!"null"><#--我的主页-->
+</#if>
+<#if d_UserBehave??>
+	<#assign d_bookSheetListContent = d_UserBehave.getBookSheetList("0","1","2",d_page,pageSize)! "">
+</#if>
+<#if d_bookSheetListContent != "">
+	<#assign d_bookSheetList = d_bookSheetListContent.getContent()!"">
+	<!--d_bookSheetList==${d_bookSheetList?size}-->
+	<#assign nextPageUrl = d_bookSheetListContent.getNextPage()!"null">
+	<#assign d_bookSheettotleSize = d_bookSheetListContent.getTotalSize()!0>
+	<#assign d_bookSheettotleSize = d_bookSheettotleSize?number>
+	<!--d_bookSheettotleSize==${d_bookSheettotleSize}-->
+</#if>
+<#if d_bookSheettotleSize &gt; 0>
+<section id="${fragmentId}" style="background:#fcfcfc">
+	<#if f_showScene == "1"><#-- 显示一个主页 -->
+		<section class="cmr-person-ta" style="position:relative;">
+		<#if d_mbid?? && d_mbid !=""><#-- 他的主页 -->
+			<span class="cmr-perso-lef" style="font-weight:500;color:#464c56;">TA的书单</span>	
+		<#else>
+			<span class="cmr-perso-lef" style="font-weight:500;color:#464c56;">我的书单</span>
+		</#if>
+		<#if d_mbid?? && d_mbid !="">
+			<a href="${seeMoreUrl}&mbid=${d_mbid}">
+		<#else>
+			<a href="${seeMoreUrl}">
+		</#if>
+			<span class="cmr-ri-pero" style="color:#3e8aff">
+                                 <i style="position:absolute;right:2rem;">${seeMore}</i>
+				<i class="cmr-icon cmr-greater-icon cmr-font-big cmr-color" style="position:absolute;right:4.2%;top:0.99rem;"></i>
+			</span>
+		</a>
+		</section>
+	</#if>
+	<#list d_bookSheetList as bookSheet>
+	<#assign title = bookSheet.getTitle()! ""><#--获取书单标题-->
+	<#assign bsDesc = bookSheet.getDesc()! ""><#--获取书单描述-->
+	<#assign relatedTagList = bookSheet.getRelatedTagList()! ""><#--获取书单标签-->
+	<#assign detailUrl = bookSheet.getDetailUrl()! "">
+	<#call HDfunc(d_UserBehave,detailUrl,ln_num)><#--通过call传递实参-->
+	<#assign detailUrl = url>
+	<#assign collectNum = bookSheet.getCollectNum()! "0">
+	<#assign collectNum = collectNum?number>
+	<#assign bookCatalogListContent = bookSheet.getBookCatalogList("1","1","1",1, 20)>
+	<#assign bookNum = bookCatalogListContent.getTotalSize()! "">
+	<#assign bookCatalogList = bookCatalogListContent.getContent()![]>
+	<!--bookCatalogList==${bookCatalogList?size}-->
+	<#if relatedTagList?size &gt; 0>
+		<#assign tagName = relatedTagList[0].getName()! "">
+	</#if>
+	<#if f_showScene == "1"><#-- 个人 -->
+		<section class="cmr-le-left">
+	<#else>
+		<section class="cmr-le-lef-bot">
+	</#if>
+		<a class="cmr-book" href="${detailUrl}&newWebview=1">
+			<#assign count = 0>
+			<figure class="cmr-bkcover-middle" style="margin-right:1rem;">
+					<div class="shadow1">
+						<div class="shadow-short"></div>
+						<div class="shadow-middle"></div>
+						<div class="shadow-long"></div>
+					</div>
+			<#if bookCatalogList?size!=0>
+				<#list bookCatalogList as bookCatalog>
+				<!--bookCatalog=${bookCatalog?size}-->
+					<#assign d_bookObj = bookCatalog.getBook()! "null">
+					<#if d_bookObj !="" && d_bookObj !="null">
+						<#assign coverImg = "">
+						<#assign coverImg = d_bookObj.getCoverLogo("2", "1")!"null">
+						<img class="cmr-bkimg-middle" data-src="${coverImg}" alt="">
+						<#break>
+					</#if>
+				</#list>
+			<#else>
+				<img class="cmr-bkimg-middle" alt="" data-src="/hbc/p/content/repository/ues/image/s181/nullcover.png" />
+			</#if>
+			</figure>
+			<aside class="cmr-bookinfo">
+				<figcaption class="cmr-book cmr-book-ell" style="font-size:1.06rem;">${title}</figcaption>
+				<#if userAgent?index_of('_Android_')!=-1>
+					<span class="cmr-btn-type5 cmr-han-spa cmr-posi-si" style="font-size:0.73rem;border:1px solid #C5CED8;padding:2px 3px 1px;">${tagName}</span>
+				<#else>
+					<span class="cmr-btn-type5 cmr-han-spa cmr-posi-si" style="font-size:0.73rem;border:1px solid #C5CED8;padding:2px 3px;">${tagName}</span>
+				</#if>
+				<div class="cmr-hh-fot" style="font-size:0.93rem;margin-top:0.4rem;">
+					${bsDesc}
+				</div>
+				<span class="cmr-fins">
+					
+						<i class="cmr-icon cmr-col"> ${bookSheet.getCreateTime("yyyy-MM-dd")! ""}</i>
+					
+					<#if collectNum &gt; 10000>
+						<i class="cmr-bian" style="padding-top:0.07rem;right:0;font-size:0.87rem;color:#464C56;">#{collectNum;m1M1}万人</i>
+					<#else>
+						<i class="cmr-bian" style="padding-top:0.07rem;right:0;font-size:0.87rem;color:#464C56;">${collectNum}人</i>
+					</#if>
+					<i class="cmr-icon cmr-collect-icon cmr-font-big cmr-coll-icon" style="right:1.4rem;padding-top:0.22rem;color:#464C56;"></i>
+					<i class="cmr-bian cmr-ri-bian" style="padding-top:0.07rem;right:2.5rem;font-size:0.87rem;color:#464C56;">${bookNum}本</i>
+					<i class="cmr-icon cmr-bksheet-icon cmr-font-big cmr-coll-icon" style="right:4.6rem;padding-top:0.22rem;color:#464C56;"></i>
+				</span>
+			</aside>
+		</a>
+	</section>
+	<#if f_showScene == "1" && bookSheet_index ==0>
+		<#break>
+	</#if>
+</#list>
+	<#-- 加载更多 start -->
+	<#assign nextPageUrl1 = util.addParam(nextPageUrl, "ol", "${fragmentId}")>
+	<#assign nextPageUrl2 = util.addParam(nextPageUrl1,"purl","${purl_param}")>
+	<#assign nextPageUrl3 = util.addParam(nextPageUrl2, "page", "${nextPage}")>
+	<#if nextPageUrl3?index_of('vt=3')!= -1>
+		<#assign bookNextPage4 = nextPageUrl3?replace('vt=3','vt=9')>
+	<#else>
+		<#assign bookNextPage4 = util.addParam(nextPageUrl3, "vt", "9")>
+	</#if>
+	<#assign nextPageData = "{'nextUrl':'${bookNextPage4}','currPage':'${currPage}','nextPage':'${nextPage}','fragmentId':'${fragmentId}'}">
+	<#if nextPageUrl!="" && nextPageUrl!="null" && (!nextPageUrl?contains('#')&&!nextPageUrl?contains('null'))&&f_showScene="2">
+	
+		<div class="spin">
+			<input id="downlazyLoad" type="hidden" value="${nextPageData}"/>
+		</div>
+	</#if>
+	<#-- 加载更多 end -->
+	
+</section>
+<#if f_showScene="2">
+<div class="showOver">已显示全部</div>
+</#if>
+	
+<#else>
+	<#if d_mbid?? && d_mbid !="">
+		<section class="cmr-person">
+		<span class="cmr-shu-person" style="font-weight:500;color:#464c56;">TA的书单</span>
+		<div class="cmr-kong-person">
+			<i class="cmr-kong-i">${f_listKong}</i>
+		</div>
+		</section>
+	<#else>
+		<section class="cmr-person">
+		<span class="cmr-shu-person" style="font-weight:500;color:#464c56;">我的书单</span>
+		<div class="cmr-bao">
+			<i class="cmr-tt-shu">${f_bookListKong}</i>
+			<a href="${seeLink}"><span class="cmr-kan">去看看</span></a>
+		</div>
+		</section>
+	</#if>
+</#if>
+
+
+<#--话单统计方法用于链接统计点击次数-->
+<#macro HDfunc(prama,url,num)><#-- prama必须是顶层数据源 -->
+	<#assign url = util.processForView(url)!""><#-- 给路径添加碎片id数据源id -->
+	<#assign dataSrcId = (prama.getDataSrcConf().getDataId())!""><#--数据源实例id-->
+	<#assign url = util.addLinkNo("${url}","${dataSrcId}","L${ln_num}")!"">
+	<#if url == "" || url="null"||url?contains("/#")||url?contains("javascript:;")>
+		<#assign url = "javascript:;">
+	</#if>
+	<#assign ln_num = ln_num+1>
+</#macro>
+
+

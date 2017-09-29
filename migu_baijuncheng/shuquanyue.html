@@ -1,0 +1,71 @@
+<#--
+	BR003921、韩俊朋、20170725、新增碎片
+	新增数据源:
+        链接数据源:d_link1 （充值链接）;
+                  d_link2 （咪咕币充值链接）;
+                  d_link3 （安卓老版本消费记录链接）;
+    碎片变量：
+       f_test 【小贴士文本】 输入框，非必填，默认“小贴士：赠送书券不能购买包月产品”;
+-->
+<!--fnName:书券余额_V7-->
+<style>
+.MGB-join:after{
+	left:10.2rem;
+	top:1rem;
+}
+
+</style>
+<#assign ln_num = 1>
+<#if f_value??>
+    <#assign f_test = f_value.getValue("f_test")><#--获取小贴士文本-->
+</#if>
+ <#if f_test == "">
+    <#assign f_test = "小贴士：赠送书券不能购买包月产品">
+</#if>
+<#if d_link1??>
+    <#assign d_link1 = d_link1.getUrl()! "">
+<#else>
+    <#assign d_link1 = "">
+</#if>
+<#call statistical(d_link1)>
+<#if d_link2??>
+    <#assign d_link2 = d_link2.getUrl()! "">
+<#else>
+    <#assign d_link2 = "">
+</#if>
+<#if d_link3??>
+    <#assign d_link3Desc = d_link3.getDesc()! "">
+    <#assign d_link3 = d_link3.getUrl()! "">
+<#else>
+    <#assign d_link3 = "">
+</#if>
+<#call statistical(d_link3)>
+<#assign ticketBalance=user.getTicketBalance()><#--书券总余额-->
+<#assign userAgent = request.getHeader("User-Agent")!"null">
+<!--userAgent=${userAgent}-->
+<div id="desc" style="display:none;">${d_link3Desc}</div>
+<div id="url" style="display:none;">${d_link3}</div>
+<div class="sqremain" id="sqremain">
+	<#if ticketBalance??>
+		<div class="sqtitle" style="color:#464c56">可用书券（元）</div>
+		<div class="sqye" style="color:#464c56">#{ticketBalance;m2M2}</div>
+		<div class="sqts">${f_test}</div>
+		<#if d_link1!="null" && d_link1!="" && !d_link1?contains("/#") && !d_link1?contains("#?")>
+		    <div class="sqczbtn" onclick="cmrsdk.startRecharge({url:'${d_link1}'})">充值</div>
+		<#else>
+		    <div class="sqczbtn">充值</div>
+		</#if>
+		<a href="${d_link3}" class="sy_none" style="display:none"><div class="MGB-join">${d_link3Desc}</div></a>  
+   </#if>  
+</div>
+
+<#macro statistical(url)>
+	<#if url!="null" && url!="" && (!url?contains("/#") && !url?contains("#?"))>
+		<#assign FragmentId = request.getFragmentId()!"null"><#--返回当前碎片的id-->
+		<#assign url = util.processForView(url)!"null"><#--获取数据源信息-->
+		<#assign url = util.addLinkNo('${url}','${FragmentId}','L${ln_num}')!"null">
+		<#assign ln_num = ln_num + 1>
+	<#else>
+		<#assign url = "javascript:;">
+	</#if>
+</#macro>

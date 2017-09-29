@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" href="../css/refre.css">
+	<script src="../js/jquery-2.2.3.min.js"></script>
+</head>
+<body>
+	<div class="box"></div>
+	<ul id="fragmentId">
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<li>a</li>
+		<div class="spin">
+			<input type="hidden" id="downlazyLoad" value="nextUrl":"ddd" "b":"ddd",>
+		</div>
+	</ul>
+	<div class="showOver">已显示全部</div>
+</body>
+<script>
+	/*
+	* clientHeight/clientWidth 元素可见区域容器的高度
+	* offsetHeight/offsetWidth 元素容器的高度，加上边框和滚动条的高度
+	* scrollHeight/scrollWidth 指元素内容的高度，而不是容器的高度。当元素内容的高度大于容器高度时，指元素内容的高度
+	* offsetTop/offsetLeft 距离父元素顶端左侧的距离
+	* scrollTop/scrollLeft 元素中垂直滚动条滚动的距离
+	*/
+	//下拉刷新 开始
+	var refresdiv = $('<div class="refresto"></div>');
+	$(".box").append(refresdiv);
+	//下拉刷新 结束
+
+	/********************************************************************************/
+
+	//上拉加载 start
+	//获得元素的可视高度 容器高度，不包括滚动条和边框，不传参数表示浏览器窗口的可视高度
+	function getClientHeight(){
+		var clientHeight = 0;
+		if(document.body.clientHeight && document.documentElement.clientHeight){
+			var clientHeight = (document.body.clientHeight < document.documentElement.clientHeight) ? document.body.clientHeight : document.documentElement.clientHeight;
+		}else{
+			var clientHeight = (document.body.clientHeight > document.documentElement.clientHeight) ? document.body.clientHeight : document.documentElement.clientHeight;
+		}
+		console.log(clientHeight);
+		return clientHeight;
+	};
+	//获得元素中滚动条纵向滚动的距离，不传参数表示浏览器滚动条的纵向滚动距离
+	function getScrollTop(){
+		var scrollTop = 0;
+		if(document.documentElement && document.documentElement.scrollTop){
+			scrollTop = document.documentElement.scrollTop;
+		}else if(document.body){
+			scrollTop = document.body.scrollTop;
+		}
+		console.log(scrollTop);
+		return scrollTop;
+	};
+	//获得元素的内容高度，包括显示的内容和隐藏的内容，不传参数表示页面整个文档的高度
+	function getScrollHeight(){
+		var scrollHeight = (Math.max(document.body.scrollHeight, document.documentElement.scrollHeight))-50;
+		console.log(scrollHeight);
+		return scrollHeight;
+	};
+	var loadFlag = false;
+	//如果元素可视区域高度和滚动条离上部距离之和 大于 元素的内容高度 就显示上拉加载
+	function isloadingMore(){
+		if(getClientHeight() + getScrollTop() >getScrollHeight()){
+			downlazyLoad();
+		}
+	};
+
+	function downlazyLoad(){
+		var more = document.getElementById("downlazyLoad");
+		if(more){
+			if(!loadFlag){
+				loadFlag = true;
+				$(".spin").show();//展示转圈
+				$.ajax({
+					type:'get',
+					url:'../json/json.txt',
+					cache:'false',
+					success:function(returnData){
+						setTimeout(function(){
+							$(".spin").remove();
+						},1000);
+						var data = eval('('+returnData+')');
+						var data01 = data.pageData.membercard_benefit.data.richContent;
+						$("#fragmentId").append(data01);
+						setTimeout(function(){
+							loadFlag = false;
+						},1000)
+					},error:function(error){
+						setTimeout(function(){
+							loadFlag = false;
+						},1000)
+					}
+				})
+			}
+		}else{
+			if($('.spin').size() > 0){
+	 			$('.spin').remove()
+	 		};
+	 		$('.showOver').show();//已显示全部
+		}
+	};
+
+	// function downlazyLoad(){
+	// 	var more = document.getElementById("downlazyLoad");
+	// 	if(more){
+	// 		if(more != null && more != undefined && more != ""){
+	// 			var ajaxData = more.getAttribute('value');//获取html传过来的数据
+	// 			if(ajaxData != null && ajaxData != undefined && ajaxData !=""){
+	// 				var jsonData = eval('('+ajaxData+')');//转化成json格式
+	// 				console.log(jsonData);
+	// 				if(typeof(jsonData) == "object"){
+	// 					var ajaxUrl = jsonData.nextUrl,//获取ajax的url地址
+	// 						fragmentId = jsonData.fragmentId;
+	// 						if(!loadFlag){
+	// 							loadFlag = true;
+	// 							$(".spin").show();//展示转圈
+	// 							$.ajax({
+	// 								type:'post',
+	// 								url:'ajaxUrl',
+	// 								cache:false,
+	// 								success:function(returnData){
+	// 									$(_more).parent().remove();//先移除转圈
+	// 									$("#"+fragmentId).append(returnData);
+	// 									setTimeout(function(){
+	// 										loadFlag = false;
+	// 									},1000);
+	// 								},error:function(error){
+	// 									setTimeout(function () {
+	// 										loadFlag = false;
+	// 									},1000);
+	// 								}
+	// 							})
+	// 						}
+	// 				}
+	// 			}
+	// 		}
+	// 	}else{
+	// 		if($('.spin').size() > 0){
+	// 			$('.spin').remove()
+	// 		};
+	// 		$('.showOver').show();//已显示全部
+	// 	}
+	// }
+
+	//初始化
+	window.onscroll = function(){
+		isloadingMore();
+	}
+</script>
+</html>

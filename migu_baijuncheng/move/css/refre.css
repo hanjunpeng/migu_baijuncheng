@@ -1,0 +1,47 @@
+*{
+	margin:0;padding:0;
+	list-style: none;
+}
+body{
+	text-align: center;
+}
+.box{
+	height:20px;
+	width:100%;
+	display: none;
+}
+/*上拉加载 start*/
+.showOver{
+    color: #969fa9;
+    font-size: 11px;
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
+    margin-top: 10px;
+    display: none;
+}
+.spin{
+	width:25px;
+	height: 25px;
+	background: url(../images/loading_V7.png) no-repeat;
+	background-size: 25px auto;
+	margin: 10px 0 10px 48%;
+	min-height: 0;
+	vertical-align:sub;
+	-webkit-animation:spin 0.4s linear infinite;
+}
+@-webkit-keyframes spin{
+    from{
+        -webkit-transform:rotate(0deg);
+        transform:rotate(0deg);
+        -o-transform:rotate(0deg);
+        -moz-transfomr:rotate(0deg);
+    }
+    to{
+        -webkit-transform:rotate(360deg);
+        transform:rotate(360deg);
+        -o-transform:rotate(360deg);
+        -moz-transfomr:rotate(360deg);
+    }
+}
+/*上拉加载 end*/
